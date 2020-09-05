@@ -2,7 +2,7 @@ SHELL=/bin/bash
 
 install-env:
 	conda create -n wahoo python=3.7
-	conda activate wahoo && pip install -r requirements.txt
+	source activate wahoo && pip install -r requirements.txt
 	conda install ipykernel
 	python -m ipykernel install --user --name wahoo --display-name "wahoo"
 
