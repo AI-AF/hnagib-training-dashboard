@@ -1,6 +1,4 @@
-# Project Title
-
-Project description 
+# Wahoo TickrX Data Analysis
 
 :open_file_folder: Repo Organization
 --------------------------------
