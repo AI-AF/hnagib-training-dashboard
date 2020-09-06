@@ -1,4 +1,4 @@
-# Wahoo TickrX Data Analysis
+# Wahoo TickrX Heart Rate Data Reader 
 Using python to read and analyze heart rate data from Wahoo TickrX heart rate belt. Check out [notebook](https://nbviewer.jupyter.org/github/hnagib/Wahoo-Tickrs-Logs/blob/master/notebooks/hn-parse-fit-file.ipynb) for example usage. 
 
 :warning: fitparse (v1.0.0) source code had to be modified to parse wahoo's .fit files. See [issue](https://github.com/dtcooper/python-fitparse/issues/113) for details.
