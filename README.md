@@ -1,4 +1,4 @@
-# :construction Wahoo TickrX Data Analysis
+# :construction: Wahoo TickrX Data Analysis
 
 
 :open_file_folder: Repo Organization
