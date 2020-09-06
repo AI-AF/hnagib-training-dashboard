@@ -4,19 +4,19 @@
 :open_file_folder: Repo Organization
 --------------------------------
 
-    ├── src                <- Modules used in and shared by different lectures & assignments
-    │   ├── ...       
+    ├── src                
+    │   ├── plotutils.py              <-- Bokeh plotting functions    
+    │   └── wahooreader.py            <-- .fit file data reader
+    │
+    ├── notebooks          
+    │   ├── hn-parse-fit-file.ipynb   <-- parsing and visualizing heart rate data         
     │   └── ...            
     │
-    ├── notebooks          <- Jupyter notebooks for each lecture
-    │   ├── ...            
-    │   └── ...            
-    │
-    ├── data               <- Directory for storing small datasets and staging larger ones
-    │   ├── ...       
+    ├── data               
+    │   ├── 2020-09-05.fit            <-- sample .fit file      
     │   └── ... 
     │
-    ├── Makefile           <- Makefile with commands to automate installation of python environment
-    ├── requirements.txt   <- List of python packages required     
+    ├── Makefile                      <- Makefile with commands to automate installation of python environment
+    ├── requirements.txt              <- List of python packages required     
     ├── README.md
     └── .gitignore         
