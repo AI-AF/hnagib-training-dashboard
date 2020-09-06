@@ -5,10 +5,9 @@ class WahooTickrX:
 
     def __init__(self, filepath):
         """
-        :param email: Email address login for WodUp
-        :param password: WodUp login password
-        :param url: url for profile/user to scrape
-        :param chrome_driver_path: path to chromedriver executable
+        :param filepath: path to fit file directory
+        :param fitfile: fit file parser object
+        :param heartrate: pandas dataframe with heart rate data
         """
         self.filepath = filepath
         self.fitfile = fitparse.FitFile(filepath)
@@ -28,6 +27,10 @@ class WahooTickrX:
     
     
     def gen_heartrate_detla(self, lags=[60,120,180]):
+        """
+        Create a lagged column for each of the specified heart rate recovery period in seconds
+        :param lags: heart recovery periods in seconds.
+        """
         df = self.heartrate
         for lag in lags:
             df[f'{lag}_sec_rec'] = df['heart_rate'] - df['heart_rate'].shift(-lag)
