@@ -1,5 +1,5 @@
 # Wahoo TickrX Heart Rate Data Reader 
-<img width=400 src="https://github.com/hnagib/Wahoo-Fit-Reader/blob/master/img/wachoo-tickx.png">
+<img width=400 src="https://github.com/hnagib/Wahoo-Fit-Reader/blob/master/img/wahoo-tickrx.png">
 
 Using python to read and analyze heart rate data from Wahoo TickrX heart rate belt. Check out [notebook](https://nbviewer.jupyter.org/github/hnagib/Wahoo-Tickrs-Logs/blob/master/notebooks/hn-parse-fit-file.ipynb) for example usage. 
 
