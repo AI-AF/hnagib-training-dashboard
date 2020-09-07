@@ -4,5 +4,4 @@ scipy==1.2.1
 ipywidgets==6.0.0
 bokeh==0.12.16
 matplotlib==3.1.0
-fitdecode==0.6.0
-fitparse==1.0.0
+fitparse==1.2.0
