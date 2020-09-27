@@ -30,7 +30,14 @@ def export_hr_ts(fit, datadir):
     wtx.heartrate.to_csv(output_file)
 
 
-def proc_fit(func, datadir):
+def proc_fit(fit_files, func, datadir):
+    """
+    Given fitfiles, process them if the processed files don't exist.
+
+    :param func: fit file processing function that exports csvs
+    :param datadir: directory where csv-s are exported
+    :return: None
+    """
     out = []
     for fit in fit_files:
         ts = os.path.basename(fit)[:17]
@@ -49,5 +56,5 @@ if __name__ == '__main__':
     datadir_hrsum = '/Users/hasannagib/Documents/s3stage/wahoo/heartrate_sumstat/'
     datadir_hrts = '/Users/hasannagib/Documents/s3stage/wahoo/heartrate_ts/'
 
-    proc_fit(export_hr_sumstat, datadir_hrsum)
-    proc_fit(export_hr_ts, datadir_hrts)
+    proc_fit(fit_files, export_hr_sumstat, datadir_hrsum)
+    proc_fit(fit_files, export_hr_ts, datadir_hrts)
