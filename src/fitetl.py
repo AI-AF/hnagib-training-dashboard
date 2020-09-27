@@ -50,4 +50,4 @@ if __name__ == '__main__':
     datadir_hrts = '/Users/hasannagib/Documents/s3stage/wahoo/heartrate_ts/'
 
     proc_fit(export_hr_sumstat, datadir_hrsum)
-    proc_fit(export_hr_sumstat, datadir_hrts)
+    proc_fit(export_hr_ts, datadir_hrts)

@@ -11,35 +11,45 @@ import math
 
     
 def plotts(df_plot, 
-            ys=None, 
+            ys=None,
+            units=None,
             hover_vars=None,
             ts_col='timestamp', 
             styles=['-'],
             palette=['#154ba6', '#3f8dff', '#7ec4ff', '#e73360'],
-            bar_width=[24*60*60*5000],
+            bar_width=[24*60*60*900],
+            circle_size=7.5,
             title=None,
-            plot_height=300,
+            plot_height=350,
             plot_width=750,
             ylabel=None,
             xlabel=None,
             x_range=None,
-            legend_location='bottom_left',
-            legend_orientation='horizontal'
+            legend_location='below',
+            legend_orientation='horizontal',
+            ymin=None,
+            ymax=None
            ):
     
     if ys==None:
         ys=df_plot.columns
     
+    if units==None:
+        units=['']*len(ys)
+    
     df_plot = df_plot.reset_index().copy()
-    df_plot['ts_str'] = df_plot[ts_col].dt.strftime('%H:%M:%S')
+    df_plot['ts_str'] = df_plot[ts_col].dt.strftime('%Y-%m-%d %H:%M:%S')
     cds = ColumnDataSource(data=df_plot)
+    
+    if title == None:
+        title = df_plot[ts_col].dt.strftime('%Y-%m-%d %H:%M:%S')[0]
     
     p = figure(
         x_axis_type="datetime",
         plot_height=plot_height,
         plot_width=plot_width,
         x_range=x_range,
-        title=df_plot[ts_col].dt.strftime('%Y-%m-%d %H:%M:%S')[0],
+        title=title,
     )
     
     # Define a DataSource
@@ -57,7 +67,14 @@ def plotts(df_plot,
       line_source.change.emit();
     }
     '''
-    rL = p.segment(x0='x', y0=-50, x1='x', y1=200, color='grey', line_width=1, source=line_source)
+    if ymin == None:
+        ymin = df_plot[ys].min().min()
+        
+    if ymax == None:
+        ymax = df_plot[ys].max().max()
+        
+    
+    rL = p.segment(x0='x', y0=ymin, x1='x', y1=ymax, color='grey', line_width=1, source=line_source)
     
     plot_dict = {}
     
@@ -84,7 +101,8 @@ def plotts(df_plot,
         if ("o" in style) or ("*" in style):
             plot_dict[y].append(p.circle(
                 x=ts_col,
-                y=y, 
+                y=y,
+                size=circle_size,
                 color=color,
                 alpha=0.5,
                 source=cds
@@ -103,25 +121,32 @@ def plotts(df_plot,
         #p.add_tools(HoverTool(renderers=[plot_dict[y]], mode='hline'))
     
     legend = Legend(items=[(var, plots) for var, plots in plot_dict.items()])
-    p.add_layout(legend)
+    p.add_layout(legend, legend_location)
     p.legend.click_policy = 'hide'
-    p.legend.location = legend_location
     p.legend.orientation = legend_orientation
     
-    hovers = [(y, f'@{y} bpm') for y in ys] + [['Time', '@ts_str']]
+    hovers = [(y, f'@{y} {unit}') for y,unit in zip(ys, itertools.cycle(units))] + [['Time', '@ts_str']]
     
     if hover_vars is not None:
         hovers += [[h, f'@{h}'] for h in hover_vars]
-       
-    p.add_tools(HoverTool(
-        tooltips=None,
-        callback=CustomJS(code=js, args={'line_source': line_source})))
     
-    p.add_tools(HoverTool(
-        renderers=[v[0] for k,v in plot_dict.items()],
-        tooltips=hovers, 
-        point_policy='snap_to_data',
-        line_policy='nearest')
+    p.add_tools(
+        HoverTool(
+            renderers=[v[0] for k,v in plot_dict.items()],
+            tooltips=hovers, 
+            point_policy='snap_to_data',
+            line_policy='nearest'
+        )
+    )
+    
+    p.add_tools(
+        HoverTool(
+            tooltips=None,
+            callback=CustomJS(
+                code=js, 
+                args={'line_source': line_source}
+            )
+        )
     )
             
     

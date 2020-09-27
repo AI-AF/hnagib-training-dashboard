@@ -1,5 +1,6 @@
 import fitparse
 import pandas as pd
+import os
 
 class WahooTickrX:
 
@@ -11,8 +12,9 @@ class WahooTickrX:
         """
         self.filepath = filepath
         self.fitfile = fitparse.FitFile(filepath)
+        self.datets = pd.to_datetime(os.path.basename(filepath)[:17])
         self.heartrate = self._get_heartrate_data()
-        self.gen_heartrate_detla()
+        self.add_heartrate_detla()
         
         
     def _get_heartrate_data(self):
@@ -23,10 +25,10 @@ class WahooTickrX:
                 if record_data.name in ['heart_rate', 'timestamp']:
                     records[record_data.name] = record_data.value
             data.append(records)
-        return pd.DataFrame(data).set_index('timestamp').tz_localize('GMT').tz_convert('EST')
+        return pd.DataFrame(data).set_index('timestamp').iloc[:-20] #.tz_localize('GMT').tz_convert('EST')
     
     
-    def gen_heartrate_detla(self, lags=[60,120,180]):
+    def add_heartrate_detla(self, lags=[60,120,180]):
         """
         Create a lagged column for each of the specified heart rate recovery period in seconds
         :param lags: heart recovery periods in seconds.
@@ -35,3 +37,13 @@ class WahooTickrX:
         for lag in lags:
             df[f'{lag}_sec_rec'] = df['heart_rate'] - df['heart_rate'].shift(-lag)
             
+    def get_heartrate_zones(self):
+        zones ={
+            'peak': (self.heartrate.query('heart_rate >= 174')).shape[0],
+            'hard': (self.heartrate.query('(heart_rate >= 152) & (heart_rate <= 173)')).shape[0],
+            'cardio': (self.heartrate.query('(heart_rate >= 138) & (heart_rate <= 151)')).shape[0],
+            'fatburn': (self.heartrate.query('(heart_rate >= 119) & (heart_rate <= 137)')).shape[0],
+            'easy': (self.heartrate.query('heart_rate <= 118')).shape[0] 
+        }
+        return zones
+        
