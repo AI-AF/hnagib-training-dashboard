@@ -1,4 +1,3 @@
-import sys
 from wahooreader import WahooTickrX
 import os
 from pathlib import Path

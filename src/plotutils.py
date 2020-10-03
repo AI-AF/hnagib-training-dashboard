@@ -1,13 +1,8 @@
 from bokeh.io import show, output_notebook
 from bokeh.models import ColumnDataSource, HoverTool, Legend
 from bokeh.models.callbacks import CustomJS
-from bokeh.palettes import Spectral6, Dark2, inferno
 from bokeh.plotting import figure
-from bokeh.transform import factor_cmap
-from bokeh.models import Range1d
-import datetime
 import itertools
-import math
 
     
 def plotts(df_plot, 
@@ -27,8 +22,10 @@ def plotts(df_plot,
             x_range=None,
             legend_location='below',
             legend_orientation='horizontal',
+            ts_format='%Y-%m-%d %H:%M:%S',
             ymin=None,
-            ymax=None
+            ymax=None,
+            add_trace=False
            ):
     
     if ys==None:
@@ -38,7 +35,7 @@ def plotts(df_plot,
         units=['']*len(ys)
     
     df_plot = df_plot.reset_index().copy()
-    df_plot['ts_str'] = df_plot[ts_col].dt.strftime('%Y-%m-%d %H:%M:%S')
+    df_plot['ts_str'] = df_plot[ts_col].dt.strftime(ts_format)
     cds = ColumnDataSource(data=df_plot)
     
     if title == None:
@@ -73,9 +70,7 @@ def plotts(df_plot,
     if ymax == None:
         ymax = df_plot[ys].max().max()
         
-    
-    rL = p.segment(x0='x', y0=ymin, x1='x', y1=ymax, color='grey', line_width=1, source=line_source)
-    
+
     plot_dict = {}
     
     for y, color, style, width in zip(ys, itertools.cycle(palette), itertools.cycle(styles), itertools.cycle(bar_width)):
@@ -138,21 +133,21 @@ def plotts(df_plot,
             line_policy='nearest'
         )
     )
-    
-    p.add_tools(
-        HoverTool(
-            tooltips=None,
-            callback=CustomJS(
-                code=js, 
-                args={'line_source': line_source}
+
+    if add_trace:
+        rL = p.segment(x0='x', y0=ymin, x1='x', y1=ymax, color='grey', line_width=1, source=line_source)
+        p.add_tools(
+            HoverTool(
+                tooltips=None,
+                callback=CustomJS(
+                    code=js,
+                    args={'line_source': line_source}
+                )
             )
         )
-    )
-            
-    
+
     p.yaxis.axis_label = ylabel
     p.xaxis.axis_label = xlabel
     
-    
     show(p)
-    return p
+    return cds, p
