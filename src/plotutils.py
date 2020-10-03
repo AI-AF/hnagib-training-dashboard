@@ -150,4 +150,4 @@ def plotts(df_plot,
     p.xaxis.axis_label = xlabel
     
     show(p)
-    return cds, p
+    return p
