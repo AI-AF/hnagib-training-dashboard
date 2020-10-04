@@ -37,6 +37,7 @@ def plotts(df_plot,
     
     df_plot = df_plot.reset_index().copy()
     df_plot['ts_str'] = df_plot[ts_col].dt.strftime(ts_format)
+    df_plot['dt_str'] = df_plot[ts_col].dt.strftime('%Y-%m-%d')
     cds = ColumnDataSource(data=df_plot)
     
     if title is None:
