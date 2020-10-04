@@ -22,23 +22,24 @@ def plotts(df_plot,
             x_range=None,
             legend_location='below',
             legend_orientation='horizontal',
-            ts_format='%Y-%m-%d %H:%M:%S',
+            ts_format='%a %b %d %Y',
             ymin=None,
             ymax=None,
-            add_trace=False
+            trace=False,
+            show_plot=True
            ):
     
-    if ys==None:
+    if ys is None:
         ys=df_plot.columns
     
-    if units==None:
+    if units is None:
         units=['']*len(ys)
     
     df_plot = df_plot.reset_index().copy()
     df_plot['ts_str'] = df_plot[ts_col].dt.strftime(ts_format)
     cds = ColumnDataSource(data=df_plot)
     
-    if title == None:
+    if title is None:
         title = df_plot[ts_col].dt.strftime('%Y-%m-%d %H:%M:%S')[0]
     
     p = figure(
@@ -64,12 +65,11 @@ def plotts(df_plot,
       line_source.change.emit();
     }
     '''
-    if ymin == None:
+    if ymin is None:
         ymin = df_plot[ys].min().min()
         
-    if ymax == None:
+    if ymax is None:
         ymax = df_plot[ys].max().max()
-        
 
     plot_dict = {}
     
@@ -103,7 +103,7 @@ def plotts(df_plot,
                 source=cds
             ))
             
-        if ("|" in style):
+        if "|" in style:
             plot_dict[y].append(p.vbar(
                 x=ts_col,
                 top=y,
@@ -112,9 +112,7 @@ def plotts(df_plot,
                 alpha=0.5,
                 source=cds
             ))
-            
-        #p.add_tools(HoverTool(renderers=[plot_dict[y]], mode='hline'))
-    
+
     legend = Legend(items=[(var, plots) for var, plots in plot_dict.items()])
     p.add_layout(legend, legend_location)
     p.legend.click_policy = 'hide'
@@ -134,8 +132,8 @@ def plotts(df_plot,
         )
     )
 
-    if add_trace:
-        rL = p.segment(x0='x', y0=ymin, x1='x', y1=ymax, color='grey', line_width=1, source=line_source)
+    if trace:
+        rl = p.segment(x0='x', y0=ymin, x1='x', y1=ymax, color='grey', line_width=1, source=line_source)
         p.add_tools(
             HoverTool(
                 tooltips=None,
@@ -148,6 +146,8 @@ def plotts(df_plot,
 
     p.yaxis.axis_label = ylabel
     p.xaxis.axis_label = xlabel
-    
-    show(p)
-    return p
+
+    if show_plot:
+        show(p)
+
+    return p, cds
