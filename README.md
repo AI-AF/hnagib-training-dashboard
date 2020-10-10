@@ -1,5 +1,5 @@
 ## Training Dashboard
-My personal [training dashboard](http://hnagib.com) aggregating data from Wahoo, WodUp & Fitbit.
+Hasan's [training dashboard](http://hnagib.com) aggregating data from Wahoo, WodUp & Fitbit.
 
 [<img width=600 src="https://github.com/hnagib/training-dashboard/blob/master/img/dash-demo.png">](http://hnagib.com)
 
