@@ -1,20 +1,24 @@
-## Wahoo Heart Rate Data Reader 
-<img width=200 src="https://github.com/hnagib/Wahoo-Fit-Reader/blob/master/img/wahoo-tickrx.png">
+## Training Dashboard
+My personal training dashboard aggregating data from Wahoo, WodUp & Fitbit. Check out the dashboard at [hnagib.com](hnagib.com)
 
-Using python to read and analyze heart rate data from Wahoo TickrX heart rate belt. Check out [notebook](https://nbviewer.jupyter.org/github/hnagib/Wahoo-Fit-Reader/blob/master/notebooks/hn-hr-dataviz.ipynb) for example usage. 
+<img width=200 src="https://github.com/hnagib/Wahoo-Fit-Reader/blob/master/img/wahoo-tickrx.png">
 
 :open_file_folder: Repo Organization
 --------------------------------
 
     ├── src                
-    │   ├── plotutils.py                         <-- Bokeh plotting functions    
-    │   └── wahooreader.py                       <-- .fit file data reader
+    │   ├── chromedriver                         <-- chromedriver for selenium    
+    │   ├── fitetl.py                            <-- wahoo .fit file ETL job    
+    │   ├── plotutils.py                         <-- Bokeh plotting functions   
+    │   ├── refresh_dashboard.py                 <-- hnagib.com dashboard update
+    │   ├── wahooreader.py                       <-- module for processing wahoo .fit files       
+    │   └── wodupcrawler.py                      <-- module for scraping WodUp
     │
     ├── notebooks          
-    │   ├── hn-parse-fit-file.ipynb              <-- parsing and visualizing heart rate data         
+    │   ├── hn-hr-dataviz.ipynb                  <-- demo of hnagib.com dashboard build         
     │   └── ...            
     │
-    ├── data               
+    ├── data                                     <-- directory for staging data
     │   ├── 2020-09-05.fit                       <-- sample .fit file      
     │   └── ... 
     │
