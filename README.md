@@ -1,5 +1,5 @@
 ## Training Dashboard
-My personal [training dashboard](http://www.hnagib.com) aggregating data from Wahoo, WodUp & Fitbit
+My personal [training dashboard](http://hnagib.com) aggregating data from Wahoo, WodUp & Fitbit
 
 :open_file_folder: Repo Organization
 --------------------------------
