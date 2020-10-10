@@ -1,12 +1,10 @@
-import sys
 from plotutils import plotts
-from bokeh.io import output_notebook, show, save, output_file
-from bokeh.layouts import gridplot, Column, Row
-from bokeh.models.widgets import DatePicker, RangeSlider
-from bokeh.models import CustomJS, Div, Markup, ColumnDataSource, HoverTool, Legend, Range1d, DataRange1d, TapTool, OpenURL, Button, Band
+from bokeh.io import save, output_file
+from bokeh.layouts import Column, Row
+from bokeh.models.widgets import DatePicker
+from bokeh.models import CustomJS, Div, ColumnDataSource, DataRange1d, TapTool, Button, Band
 from bokeh.plotting import figure
 
-from datetime import datetime
 import glob
 import os
 import time
@@ -19,12 +17,10 @@ from datetime import datetime
 
 from wodupcrawler import WodUp
 import json
-import subprocess
 
 
 plot_window = pd.Timedelta('31 days')
 datadir_hrsum = '/Users/hasannagib/Documents/s3stage/wahoo/heartrate_sumstat/'
-
 
 df = dd.read_csv(Path(f'{datadir_hrsum}*.csv')).compute()
 df = df.rename(columns={'Unnamed: 0': 'timestamp'})
@@ -92,15 +88,6 @@ with open('../data/session_urls.json') as json_file:
 with open('../data/session_wods.json') as json_file:
     wods = json.load(json_file)
 
-wu = WodUp(
-    email='hasan.nagib@gmail.com',
-    password=os.environ['wodify_password'],
-    username='hasannagib'
-)
-
-wu.session_urls = urls
-wu.session_wods = wods
-
 # Get list of dates to look urls for
 dts = []
 for f in ts_files:
@@ -108,26 +95,36 @@ for f in ts_files:
     if pd.to_datetime(dt) > pd.to_datetime('2020-09-01'):
         dts.append(dt)
 
-# Add missing urls
-urls = wu.get_session_urls(dts)
-wods = wu.get_session_wods()
+if set(dts) - set(wods.keys()):
+    wu = WodUp(
+        email='hasan.nagib@gmail.com',
+        password=os.environ['wodify_password'],
+        username='hasannagib'
+    )
 
-# Save json
-with open('../data/session_urls.json', 'w') as outfile:
-    json.dump(urls, outfile)
+    wu.session_urls = urls
+    wu.session_wods = wods
 
-with open('../data/session_wods.json', 'w') as outfile:
-    json.dump(wods, outfile)
+    # Add missing urls
+    urls = wu.get_session_urls(dts)
+    wods = wu.get_session_wods()
 
-wu.browser.quit()
+    # Save json
+    with open('../data/session_urls.json', 'w') as outfile:
+        json.dump(urls, outfile)
+
+    with open('../data/session_wods.json', 'w') as outfile:
+        json.dump(wods, outfile)
+
+    wu.browser.quit()
 
 
 header="""
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 350px; float: left;"> <h1>416 Workouts</h1> </div>
+<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 350px; float: left;"> <h1>CrossFit 416 Workouts</h1> </div>
 """
 div_header = Div(text=header)
-A=wods[dts[-1]][0]
-B=wods[dts[-1]][1]
+A = wods[dts[-1]][0]
+B = wods[dts[-1]][1]
 
 html ="""
 <p> &nbsp;&nbsp; </p>
@@ -142,7 +139,7 @@ div = Div(text=html.format(A=A, B=B))
 p1, p1_cds = plotts(
     df_bar[['L0', 'L1', 'L2', 'L3', '120_sec_rec']],
     units=['bpm'],
-    x_range=DataRange1d(end=datetime.today(), follow='end', follow_interval=plot_window),
+    x_range=DataRange1d(end=datetime.today()+pd.Timedelta('1 days'), follow='end', follow_interval=plot_window),
     styles=['--'] * 4 + 2 * ['|'],
     title='120 sec HR recovery trend',
     ylabel='Beats',
@@ -180,10 +177,10 @@ dp_callback = CustomJS(
 
     div.text = html.replace("{A}", wods[cb_obj.value][0]).replace("{B}", wods[cb_obj.value][1])
 
-    var src_data = source.data;
     var yval = cb_obj.value;
-    src_data['BPM'] = src_data[yval];
+    source.data['BPM'] = source.data[yval];
     source.change.emit()
+
     """
 )
 
@@ -199,8 +196,8 @@ tap_code = """
         console.log('Data selected: ', dt)
         dp.value = dt
         dp.change.emit()
-
-        //r.reset.emit()
+        p.change.emit()
+        r.change.emit()
         """
 
 tap1_callback = CustomJS(args={'p': p1_cds, 'r': p2, 'dp': datePicker}, code=tap_code)
@@ -217,9 +214,7 @@ button.js_on_click(CustomJS(
         'dp': datePicker,
         'urls': urls
     },
-    code="""
-    console.log(urls['2020-10-02'][0])
-
+    code="""    
     var url = "https://www.wodup.com"
 
     function formatDate(date) {
@@ -252,10 +247,8 @@ button.js_on_click(CustomJS(
 )
 )
 
-dash = Column(div_header, Row(p1, p2), Row(datePicker, button), p3, div)
-
+dash = Column(div_header, Row(p1, p2), Row(button), p3, div)
 output_dir = '/Users/hasannagib/Documents/s3stage/dashboards/416-dash.html'
-save(dash, output_dir)
-subprocess.Popen(f'aws s3 cp /Users/hasannagib/Documents/s3stage/dashboards/416-dash.html s3://hasan-blog/416-dash.html', shell=True)
 
-i
+output_file(output_dir, title="Hasan's Data Blog")
+save(dash)
