@@ -1,10 +1,10 @@
 SHELL=/bin/bash
 
 install-env:
-	conda create -n wahoo python=3.7
-	source activate wahoo && pip install -r requirements.txt
+	conda create -n hnagib python=3.7
+	source activate hnagib && pip install -r requirements.txt
 	conda install ipykernel
-	python -m ipykernel install --user --name wahoo --display-name "wahoo"
+	python -m ipykernel install --user --name hnagib --display-name "wahoo"
 
 uninstall-env:
-	conda remove --name wahoo --all
+	conda remove --name hnagib --all
