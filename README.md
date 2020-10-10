@@ -1,6 +1,9 @@
 ## Training Dashboard
 My personal [training dashboard](http://hnagib.com) aggregating data from Wahoo, WodUp & Fitbit.
 
+<img width=400 src="https://github.com/hnagib/training-dashboard/blob/master/img/dash-demo.png">
+
+
 :open_file_folder: Repo Organization
 --------------------------------
 
