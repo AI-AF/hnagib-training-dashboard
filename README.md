@@ -1,8 +1,6 @@
 ## Training Dashboard
 My personal training dashboard aggregating data from Wahoo, WodUp & Fitbit. Check out the dashboard at [hnagib.com](hnagib.com)
 
-<img width=200 src="https://github.com/hnagib/Wahoo-Fit-Reader/blob/master/img/wahoo-tickrx.png">
-
 :open_file_folder: Repo Organization
 --------------------------------
 
