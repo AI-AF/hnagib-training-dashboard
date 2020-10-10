@@ -120,7 +120,7 @@ if set(dts) - set(wods.keys()):
 
 
 header="""
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 350px; float: left;"> <h1>CrossFit 416 Workouts</h1> </div>
+<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 350px; float: left;"> <h1>Training Dashboard</h1> </div>
 """
 div_header = Div(text=header)
 A = wods[dts[-1]][0]
