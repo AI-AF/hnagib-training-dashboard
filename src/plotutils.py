@@ -9,7 +9,8 @@ def plotts(df_plot,
             ys=None,
             units=None,
             hover_vars=None,
-            ts_col='timestamp', 
+            x_axis_type='datetime',
+            xvar='timestamp',
             styles=['-'],
             palette=['#154ba6', '#3f8dff', '#7ec4ff', '#e73360'],
             bar_width=[24*60*60*900],
@@ -17,6 +18,7 @@ def plotts(df_plot,
             title=None,
             plot_height=350,
             plot_width=750,
+            alpha=0.75,
             ylabel=None,
             xlabel=None,
             x_range=None,
@@ -36,23 +38,24 @@ def plotts(df_plot,
         units=['']*len(ys)
     
     df_plot = df_plot.reset_index().copy()
-    df_plot['ts_str'] = df_plot[ts_col].dt.strftime(ts_format)
-    df_plot['dt_str'] = df_plot[ts_col].dt.strftime('%Y-%m-%d')
+
+    if x_axis_type == 'datetime':
+        df_plot['ts_str'] = df_plot[xvar].dt.strftime(ts_format)
+        df_plot['dt_str'] = df_plot[xvar].dt.strftime('%Y-%m-%d')
+
     cds = ColumnDataSource(data=df_plot)
-    
-    if title is None:
-        title = df_plot[ts_col].dt.strftime('%Y-%m-%d %H:%M:%S')[0]
-    
+
+
     p = figure(
-        x_axis_type="datetime",
+        x_axis_type=x_axis_type,
         plot_height=plot_height,
         plot_width=plot_width,
         x_range=x_range,
-        title=title,
+        title=title
     )
-    
+
     # Define a DataSource
-    line_source = ColumnDataSource(data=dict(x=[df_plot[ts_col][0]]))
+    line_source = ColumnDataSource(data=dict(x=[df_plot[xvar][0]]))
     js = '''
     var geometry = cb_data['geometry'];
     console.log(geometry);
@@ -74,12 +77,22 @@ def plotts(df_plot,
 
     plot_dict = {}
     
+#     if styles == ['/']:
+#         plot_dict['stack'] = [p.vbar_stack(
+#             ys,
+#             x=xvar,
+#             color=palette,
+#             width=bar_width,
+#             alpha=0.5,
+#             source=cds
+#         )]
+    
     for y, color, style, width in zip(ys, itertools.cycle(palette), itertools.cycle(styles), itertools.cycle(bar_width)):
         plot_dict[y] = []
         
         if style == "--":
             plot_dict[y].append(p.line(
-                x=ts_col,
+                x=xvar,
                 y=y,
                 line_dash="4 4",
                 color=color, 
@@ -88,7 +101,7 @@ def plotts(df_plot,
             
         if ('-' in style) and (style != '--'):
             plot_dict[y].append(p.line(
-                x=ts_col,
+                x=xvar,
                 y=y, 
                 color=color, 
                 source=cds
@@ -96,21 +109,21 @@ def plotts(df_plot,
             
         if ("o" in style) or ("*" in style):
             plot_dict[y].append(p.circle(
-                x=ts_col,
+                x=xvar,
                 y=y,
                 size=circle_size,
                 color=color,
-                alpha=0.5,
+                alpha=alpha,
                 source=cds
             ))
             
         if "|" in style:
             plot_dict[y].append(p.vbar(
-                x=ts_col,
+                x=xvar,
                 top=y,
                 fill_color=color,
                 width=width,
-                alpha=0.5,
+                alpha=alpha,
                 source=cds
             ))
 
@@ -119,8 +132,14 @@ def plotts(df_plot,
     p.legend.click_policy = 'hide'
     p.legend.orientation = legend_orientation
     
-    hovers = [(y, f'@{y} {unit}') for y,unit in zip(ys, itertools.cycle(units))] + [['Time', '@ts_str']]
-    
+    hovers = [(y, f'@{y} {unit}') for y, unit in zip(ys, itertools.cycle(units))] \
+
+    if x_axis_type == 'datetime':
+        hovers += [['Date', '@ts_str']]
+    elif x_axis_type == 'linear':
+        hovers += [[xvar, f'@{xvar}']]
+
+
     if hover_vars is not None:
         hovers += [[h, f'@{h}'] for h in hover_vars]
     
