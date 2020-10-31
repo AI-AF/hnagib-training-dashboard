@@ -2,7 +2,9 @@ pandas==1.1.1
 numpy==1.16.2
 scipy==1.2.1
 ipywidgets==6.0.0
-bokeh==2.2.0
+bokeh==2.2.1
 matplotlib==3.1.0
 fitparse==1.2.0
 dask[complete]==2.27.0
+selenium==3.141.0
+lxml==4.5.2

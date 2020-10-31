@@ -98,6 +98,7 @@ class fitbit:
 fb = fitbit(email='hasan.nagib@gmail.com', password=os.environ['fitbit_password'])
 time.sleep(4)
 df_new = fb.get_sleep_data()
+fb.browser.close()
 df_existing = pd.read_csv('../data/sleep.csv', parse_dates=['start', 'end'])
 df = pd.concat([df_new, df_existing]).round(2).drop_duplicates()
 df.to_csv('../data/sleep.csv', index=None)

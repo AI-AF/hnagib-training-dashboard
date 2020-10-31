@@ -16,9 +16,10 @@ def plotts(df_plot,
             bar_width=[24*60*60*900],
             circle_size=7.5,
             title=None,
-            plot_height=350,
-            plot_width=750,
+            plot_height=325,
+            plot_width=450,
             alpha=0.75,
+            line_width=3,
             ylabel=None,
             xlabel=None,
             x_range=None,
@@ -95,6 +96,8 @@ def plotts(df_plot,
                 x=xvar,
                 y=y,
                 line_dash="4 4",
+                line_width=line_width,
+                alpha=alpha,
                 color=color, 
                 source=cds
             ))    
@@ -102,7 +105,9 @@ def plotts(df_plot,
         if ('-' in style) and (style != '--'):
             plot_dict[y].append(p.line(
                 x=xvar,
-                y=y, 
+                y=y,
+                line_width=line_width,
+                alpha=alpha,
                 color=color, 
                 source=cds
             ))
