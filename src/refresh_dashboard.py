@@ -25,7 +25,7 @@ plot_window = pd.Timedelta('31 days')
 datadir_hrsum = '/Users/hasannagib/Documents/s3stage/wahoo/heartrate_sumstat/'
 
 df = dd.read_csv(Path(f'{datadir_hrsum}*.csv')).compute()
-df = df.rename(columns={'Unnamed: 0': 'timestamp'})
+df = df.rename(columns={'Unnamed: 0': 'timestamp', '174_': '174_220'})
 df['timestamp'] = pd.to_datetime(df['timestamp'])
 df = df.set_index('timestamp')
 df_bar = df.copy()
@@ -145,7 +145,7 @@ p1, p1_cds = plotts(
 
 p2, p2_cds = plotts(
     (df.rolling(7).sum().dropna() / 60),
-    ys=['174_', '152_173', '138_151'],
+    ys=['174_220', '152_173', '138_151'],
     styles=['o-'],
     units=['min'],
     title='Time spent in HR zones (7 day rolling sum)',
