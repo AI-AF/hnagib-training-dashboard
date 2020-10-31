@@ -4,12 +4,14 @@ from bokeh.layouts import Column, Row
 from bokeh.models.widgets import DatePicker
 from bokeh.models import HoverTool, CustomJS, Div, ColumnDataSource, DataRange1d, TapTool, Button, Band, Legend
 from bokeh.plotting import figure
+from bokeh.models.widgets import Panel, Tabs
 
 import glob
 import os
 import time
 from pathlib import Path
 import pandas as pd
+import numpy as np
 import dask
 import dask.dataframe as dd
 from dask.diagnostics import ProgressBar
@@ -133,6 +135,7 @@ p1, p1_cds = plotts(
     units=['bpm'],
     x_range=DataRange1d(end=datetime.today()+pd.Timedelta('1 days'), follow='end', follow_interval=plot_window),
     styles=['--'] * 4 + 2 * ['|'],
+    alpha=0.5,
     title='120 sec HR recovery trend',
     ylabel='Beats',
     plot_height=325,
@@ -267,8 +270,8 @@ p4 = figure(
 )
 p4.add_layout(Legend(), 'below')
 p4.vbar_stack(stages, x='date', width=24*60*60*900, color=colors, source=data, legend_label=[s for s in stages])
-p4.line(x='date', y='7.5hr', source=data, color='grey', line_dash="4 4")
-p4.line(x='date', y='7day_avg', source=data, legend_label='7day_avg')
+p4.line(x='date', y='7.5hr', source=data, color='grey', line_width=2, line_dash="4 4")
+p4.line(x='date', y='7day_avg', source=data, line_width=3, legend_label='7day_avg')
 p4.y_range.start = 0
 p4.x_range.range_padding = 0.1
 p4.xgrid.grid_line_color = None
@@ -304,10 +307,66 @@ p5, p5_cds = plotts(
     show_plot=False
 );
 
+df_pr = pd.read_csv('../../WodUp-Scraper/data/hasannagib-pr-table.csv').query('reps > 0')
+
+p6, p6_cds = plotts(
+    df_pr,
+    ys=['front_squat', 'back_squat', 'deadlift', 'barbell_bench_press'],
+    hover_vars=['date_front_squat', 'date_back_squat', 'date_deadlift', 'date_barbell_bench_press'],
+    xvar='reps',
+    styles=['-o'],
+    x_axis_type='linear',
+    ylabel='Weight (lbs)',
+    xlabel='Reps',
+    title='Rep PRs',
+    plot_height=427,
+    plot_width=450,
+    show_plot=False,
+    legend_location='below',
+    legend_orientation='vertical',
+
+);
+
+p6_tabs = Tabs(tabs=[Panel(child=p6, title="n-Rep PR")])
+
+tabs = []
+for i in [1, 2, 3, 4, 5]:
+
+    df_plot = []
+    for movement in ['front-squat', 'back-squat', 'deadlift', 'barbell-bench-press']:
+        df_hist = pd.read_csv(f'../../WodUp-Scraper/data/hasannagib-{movement}.csv', parse_dates=['date'])
+        df = df_hist.query(f'(reps>={i})').sort_values('date')
+        df_plot.append(np.maximum.accumulate(df).set_index('date')[['weights']].rename(
+            columns={'weights': movement.replace('-', '_')}).sort_index()
+                       )
+
+    p, _ = plotts(
+        pd.concat(df_plot),
+        xvar='date',
+        styles=['o-'],
+        units=['lbs'],
+        x_axis_type='datetime',
+        title=f'{i} rep max PR over time ',
+        xlabel='Date',
+        ylabel='Weigt (lbs)',
+        plot_height=400,
+        plot_width=450,
+        show_plot=False,
+        legend_location='below',
+        legend_orientation='vertical',
+    );
+
+    tabs.append(Panel(child=p, title=f"{i} RM"))
+
+p7_tabs = Tabs(tabs=tabs, tabs_location='above', margin=(0,0,0,0))
+
 
 header = """
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;"> 
-<h1>Hasan's Data Blog</h1>  
+<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; height: 260px; float: left;"> 
+<h1>Health & Fitness Data Blog</h1>  
+<p>This dashboard contains my personal health and fitness data. The data is sourced Fitbit, Polar HR10 and Wahoo
+TickerX heart rate belt & WodUp.com and refreshed daily. For details check out my GitHub. 
+</p>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <a href="https://www.instagram.com/hnagib/" class="fa fa-instagram"></a>
 <a href="https://www.facebook.com/bigannasah/" class="fa fa-facebook"></a>
@@ -368,17 +427,31 @@ WodUp currently does not have an API.
 """
 wod_desc = Div(text=wod_desc)
 
+rep_pr_desc = """
+<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;"> 
+<h2>Weight Lifting PRs</h2>
+<p>The views below show lift PRs for different movements and reps. A PR over time view is also included to help
+visualize training plateaus.
+</p>
+</div>
+"""
+rep_pr_desc = Div(text=rep_pr_desc)
+
+
 div_space = Div(text='<div style="width: 30px; height: 10px;"></div>')
 
 dash = Column(
     div_header,
     Row(p4, p5),
+    Row(rep_pr_desc),
+    Row(p6, p7_tabs),
     Row(hr_rec, hr_zones),
     Row(p1, p2),
     Row(hr_desc, Column(wod_desc, Row(div_space, datePicker))),
     Row(p3,div)
 )
 output_dir = '/Users/hasannagib/Documents/s3stage/dashboards/416-dash.html'
+
 
 output_file(output_dir, title="Hasan's Data Blog")
 save(dash)
