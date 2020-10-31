@@ -23,7 +23,8 @@ def plotts(df_plot,
             ylabel=None,
             xlabel=None,
             x_range=None,
-            legend_location='below',
+            legend_position='below',
+            legend_location='top_left',
             legend_orientation='horizontal',
             ts_format='%a %b %d %Y',
             ymin=None,
@@ -133,10 +134,11 @@ def plotts(df_plot,
             ))
 
     legend = Legend(items=[(var, plots) for var, plots in plot_dict.items()])
-    p.add_layout(legend, legend_location)
+    p.add_layout(legend, legend_position)
     p.legend.click_policy = 'hide'
     p.legend.orientation = legend_orientation
-    
+    p.legend.location = legend_location
+
     hovers = [(y, f'@{y} {unit}') for y, unit in zip(ys, itertools.cycle(units))] \
 
     if x_axis_type == 'datetime':

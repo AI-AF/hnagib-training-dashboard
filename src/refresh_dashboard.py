@@ -266,7 +266,7 @@ p4 = figure(
     x_axis_type="datetime",
     plot_height=325,
     plot_width=450,
-    title="Sleep stages",
+    title="Sleep quality",
 )
 p4.add_layout(Legend(), 'below')
 p4.vbar_stack(stages, x='date', width=24*60*60*900, color=colors, source=data, legend_label=[s for s in stages])
@@ -308,37 +308,66 @@ p5, p5_cds = plotts(
 );
 
 df_pr = pd.read_csv('../../WodUp-Scraper/data/hasannagib-pr-table.csv').query('reps > 0')
+movements = ['barbell_bench_press', 'back_squat', 'deadlift']
+three_lift_total = int(df_pr.query("reps==1")[movements].sum().sum())
+
+rep_pr_desc = f"""
+<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;"> 
+<h2>&#127947;&#127997; Weight Lifting PRs</h2>
+<p>The views below show lift PRs for different movements and reps. 
+My current 3 lift total is {three_lift_total} lbs. 
+My goal is to get to 1000 lbs by end of 2021. 
+Most likely path to 1000 lbs for me is: 405 lbs deadlift, 355 lbs back squat & 240 lbs bench press.
+</p>
+</div>
+"""
+rep_pr_desc = Div(text=rep_pr_desc)
 
 p6, p6_cds = plotts(
     df_pr,
-    ys=['front_squat', 'back_squat', 'deadlift', 'barbell_bench_press'],
-    hover_vars=['date_front_squat', 'date_back_squat', 'date_deadlift', 'date_barbell_bench_press'],
+    ys=movements,
+    hover_vars=[f'date_{mvmt}' for mvmt in movements],
     xvar='reps',
     styles=['-o'],
     x_axis_type='linear',
     ylabel='Weight (lbs)',
     xlabel='Reps',
-    title='Rep PRs',
-    plot_height=427,
+    title=f'Rep PRs - Three lift total: {three_lift_total} lbs',
+    plot_height=353,
     plot_width=450,
     show_plot=False,
-    legend_location='below',
+    palette=['#154ba6', '#3f8dff', '#7ec4ff', '#e73360'],
+    legend_position='center',
+    legend_location='top_right',
     legend_orientation='vertical',
 
-);
+)
 
 p6_tabs = Tabs(tabs=[Panel(child=p6, title="n-Rep PR")])
+
+lift_total = f"""
+<div style="style=font-family:courier; text-align: center;color:grey; margin-left: 40px; width: 400px; float: left;"> 
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2>
+<span style="color:#154ba6">Bench</span> +
+<span style="color:#3f8dff">Squat</span> + 
+<span style="color:#7ec4ff">Deadlift</span> = 
+<span style="color:#e73360">{three_lift_total}</span> lbs</h2>
+</div>
+"""
+lift_total = Div(text=lift_total)
 
 tabs = []
 for i in [1, 2, 3, 4, 5]:
 
     df_plot = []
-    for movement in ['front-squat', 'back-squat', 'deadlift', 'barbell-bench-press']:
-        df_hist = pd.read_csv(f'../../WodUp-Scraper/data/hasannagib-{movement}.csv', parse_dates=['date'])
+    for movement in movements:
+        df_hist = pd.read_csv(f'../../WodUp-Scraper/data/hasannagib-{movement.replace("_", "-")}.csv', parse_dates=['date'])
         df = df_hist.query(f'(reps>={i})').sort_values('date')
         df_plot.append(np.maximum.accumulate(df).set_index('date')[['weights']].rename(
-            columns={'weights': movement.replace('-', '_')}).sort_index()
-                       )
+            columns={'weights': movement}).sort_index()
+        )
 
     p, _ = plotts(
         pd.concat(df_plot),
@@ -349,11 +378,15 @@ for i in [1, 2, 3, 4, 5]:
         title=f'{i} rep max PR over time ',
         xlabel='Date',
         ylabel='Weigt (lbs)',
-        plot_height=400,
+        circle_size=5,
+        plot_height=325,
         plot_width=450,
+        palette=['#154ba6', '#3f8dff', '#7ec4ff', '#e73360'],
         show_plot=False,
-        legend_location='below',
+        legend_position='center',
+        legend_location='bottom_right',
         legend_orientation='vertical',
+
     );
 
     tabs.append(Panel(child=p, title=f"{i} RM"))
@@ -362,33 +395,86 @@ p7_tabs = Tabs(tabs=tabs, tabs_location='above', margin=(0,0,0,0))
 
 
 header = """
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; height: 260px; float: left;"> 
-<h1>Health & Fitness Data Blog</h1>  
-<p>This dashboard contains my personal health and fitness data. The data is sourced Fitbit, Polar HR10 and Wahoo
-TickerX heart rate belt & WodUp.com and refreshed daily. For details check out my GitHub. 
-</p>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<a href="https://www.instagram.com/hnagib/" class="fa fa-instagram"></a>
-<a href="https://www.facebook.com/bigannasah/" class="fa fa-facebook"></a>
-<a href="https://www.linkedin.com/in/hnagib?_l=en_US" class="fa fa-linkedin"></a>
-<a href="https://github.com/hnagib" class="fa fa-github"></a>
+<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;">
+<style>
+.fa {
+  padding: 10px;
+  font-size:200px;
+  width: 10px;
+  text-align: center;
+  text-decoration: none;
+}
 
-<p></p>
-<h2>Sleep Logs</h2>
-<p>Sleep data is sourced from Fitbit sleep logs. 
-My goal is to average 7.5 hours of time asleep & 9 hours time in bed
+/* Add a hover effect if you want */
+.fa:hover {
+  opacity: 0.7;
+}
+
+/* Set a specific color for each brand */
+
+/* Facebook */
+.fa-facebook {
+  background: white;
+  color: #3B5998;
+}
+
+.fa-linkedin {
+  background: white;
+  color: #007bb5;
+}
+
+.fa-instagram {
+  background: white;
+  color: red;
+}
+
+.fa-github {
+  background: white;
+  color: black;
+}
+
+.fa-envelope {
+  background: white;
+  color: red;
+}
+
+</style> 
+<h1>Hasan Nagib</h1>  
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<a href="https://www.facebook.com/bigannasah/" class="fa fa-facebook" style="font-size:24px"></a>
+<a href="https://www.linkedin.com/in/hnagib?_l=en_US" class="fa fa-linkedin" style="font-size:24px"></a>
+<a href="https://www.instagram.com/hnagib/" class="fa fa-instagram" style="font-size:24px"></a>
+<a href="https://github.com/hnagib" class="fa fa-github" style="font-size:24px"></a>
+<a href="mailto:hasan.nagib@gmail.com?subject = Hasan's fitness data blog&body = Hello!" class="fa fa-envelope" style="font-size:24px"></a>
+<p>
+    Welcome to my health and fitness data blog! The data is sourced from my Fitbit, Polar HR10, Wahoo
+    TickerX and WodUp.com account. The data is refreshed daily. This page is a static Bokeh dashboard
+    hosted on AWS s3. Check out my GitHub for details of the project. 
 </p>
-</div>
 """
 div_header = Div(text=header)
 
+sleep_desc = """
+<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;">
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2>&#128564; Sleep Logs</h2>
+<p>
+    Sleep data is sourced from Fitbit sleep logs. 
+    My goal is to average 7.5 hours of time asleep and 9 hours time in bed.
+    Sleep start and end hours are in 24 hour format.
+</p>
+</div>
+"""
+sleep_desc = Div(text=sleep_desc)
 
 hr_rec = """
 <div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;"> 
-<h2>Heart Rate & Workouts</h2>
-<p>Fun fact: Heart rate recovery greater than 53 bpm in 2 minutes indicates that biological age 
-is younger than calendar age. Greater recovery rate generally indicates better heart health.
-The bar chart below shows my 2-minute recovery heart rate following a workout. 
+<h2>&#127939;&#127997; Workout Heart Rate</h2>
+<p>Heart rate recovery greater than 53 bpm in 2 minutes indicates that one's biological age 
+is younger than calendar age. Greater recovery HR generally correlates with better heart health.
+The bar chart below shows my 2 minute recovery heart rate following workouts. This is calculated
+automatically using data collected from my Polar HR10 or Wahoo TickerX chest straps.   
 Click on any bar to see corresponding workout and HR profile.
 </p>
 </div>
@@ -398,9 +484,10 @@ hr_rec = Div(text=hr_rec)
 hr_zones = """
 <div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;">   
 <p>&nbsp;</p>
-<p>It's useful to monitor time spend in HR zones to modify training program. 
-I generally aim to keep 7 day cumulative peak HR zone around or under 30-45 minutes depending on the goal of
-a given training cycle. 
+<p>&nbsp;</p>
+<p>I also find it useful to monitor time spend in different HR zones. This can help guide my own programming 
+and help me decide when to push hard or slow down in CrossFit classes. I generally aim to keep 7 day cumulative 
+peak HR zone around or under 30-45 minutes depending on the goal of a given programming cycle. 
 </p>
 </div>
 """
@@ -427,23 +514,14 @@ WodUp currently does not have an API.
 """
 wod_desc = Div(text=wod_desc)
 
-rep_pr_desc = """
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;"> 
-<h2>Weight Lifting PRs</h2>
-<p>The views below show lift PRs for different movements and reps. A PR over time view is also included to help
-visualize training plateaus.
-</p>
-</div>
-"""
-rep_pr_desc = Div(text=rep_pr_desc)
 
 
 div_space = Div(text='<div style="width: 30px; height: 10px;"></div>')
 
 dash = Column(
-    div_header,
+    Row(div_header, sleep_desc),
     Row(p4, p5),
-    Row(rep_pr_desc),
+    Row(rep_pr_desc, lift_total),
     Row(p6, p7_tabs),
     Row(hr_rec, hr_zones),
     Row(p1, p2),
