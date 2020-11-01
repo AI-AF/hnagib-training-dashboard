@@ -2,10 +2,9 @@ import pandas as pd
 from selenium import webdriver
 from lxml import html
 import time
-import re
-import numpy as np
 import os
 from datetime import datetime
+from selenium.webdriver.chrome.options import Options
 
 
 class fitbit:
@@ -21,7 +20,9 @@ class fitbit:
         self.url = f'https://www.fitbit.com/sleep/'
         self.email = email
         self.password = password
-        self.browser = webdriver.Chrome(chrome_driver_path)
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        self.browser = webdriver.Chrome(chrome_driver_path, options=chrome_options)
         self.browser.get(self.url)
         self.login()
 
@@ -59,6 +60,7 @@ class fitbit:
             time.sleep(4)
 
             tree = html.fromstring(self.browser.page_source)
+            print(tree.xpath('//div[@class="sleep-log-edit ember-view"]/div/div/p/text()'))
             date.append(tree.xpath('//div[@class="sleep-log-edit ember-view"]/div/div/p/text()')[0])    
 
 
@@ -66,18 +68,24 @@ class fitbit:
             end.append(self.browser.find_element_by_xpath('//input[@data-test-qa="start-time-input"]/../../../following-sibling::div//input').get_attribute('value'))
             time.sleep(4)
 
-            sleep_stages.append([float(tree.xpath(
-                f'//li[@class="column legend-item {stage}"]//span[@class="legend-label"]/text()'
-            )[0].strip().split(' - ')[-1][:-1])/100
-                for stage in ['wake', 'rem', 'light', 'deep']
-            ])
+            try:
+                sleep_stages.append([float(tree.xpath(
+                    f'//li[@class="column legend-item {stage}"]//span[@class="legend-label"]/text()'
+                )[0].strip().split(' - ')[-1][:-1])/100
+                    for stage in ['wake', 'rem', 'light', 'deep']
+                ])
+                print(sleep_stages)
+
+            except IndexError:
+                sleep_stages.append([0.125, 0.20, 0.5, 0.175])
+                print(sleep_stages)
 
             self.browser.back()
             time.sleep(4)
         
         self.browser.close()
         
-        df = pd.DataFrame({'date':date, 'start':start, 'end':end}).join(
+        df = pd.DataFrame({'date': date, 'start': start, 'end': end}).join(
             pd.DataFrame(sleep_stages, columns=['awake', 'rem', 'light', 'deep'])
         )
 
@@ -93,12 +101,22 @@ class fitbit:
         df['end_hour'] = df['end'].dt.hour + (df['end'].dt.minute/60)
         
         return df
-    
 
-fb = fitbit(email='hasan.nagib@gmail.com', password=os.environ['fitbit_password'])
-time.sleep(4)
-df_new = fb.get_sleep_data()
-fb.browser.close()
-df_existing = pd.read_csv('../data/sleep.csv', parse_dates=['start', 'end'])
-df = pd.concat([df_new, df_existing]).round(2).drop_duplicates()
-df.to_csv('../data/sleep.csv', index=None)
+
+def main():
+    df_existing = pd.read_csv('../data/sleep.csv', parse_dates=['start', 'end'])
+
+    if not datetime.today().strftime('%Y-%m-%d') in list(df_existing['start'].apply(lambda x: x.strftime('%Y-%m-%d'))):
+#        try:
+        fb = fitbit(email='hasan.nagib@gmail.com', password=os.environ['fitbit_password'])
+        time.sleep(4)
+        df_new = fb.get_sleep_data()
+        fb.browser.close()
+        df = pd.concat([df_new, df_existing]).round(2).drop_duplicates()
+        df.to_csv('../data/sleep.csv', index=None)
+#        except:
+#            fb.browser.close()
+
+
+if __name__ == "__main__":
+    main()

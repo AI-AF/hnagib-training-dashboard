@@ -2,8 +2,7 @@ import pandas as pd
 from selenium import webdriver
 from lxml import html
 import time
-import re
-import numpy as np
+from selenium.webdriver.chrome.options import Options
 
 
 class WodUp:
@@ -20,7 +19,9 @@ class WodUp:
         self.email = email
         self.password = password
         self.username = username
-        self.browser = webdriver.Chrome(chrome_driver_path)
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        self.browser = webdriver.Chrome(chrome_driver_path, options=chrome_options)
         self.browser.get(self.url)
         self.login()
         self.raw_logs = {}

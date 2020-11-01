@@ -82,7 +82,7 @@ def plot_cal_ts(df_ts):
     p.line('s', 'BPM', source=cds, color="black", alpha=0)
 
     band = Band(base='s', upper='BPM', source=cds, level='underlay',
-                fill_alpha=0.95, fill_color='#ab383a')
+                fill_alpha=0.95, fill_color='#e73360') #ab383a
     p.add_layout(band)
     return p, cds
 
@@ -131,12 +131,15 @@ for dt in pd.date_range('2020-09-01', datetime.today()):
 
 
 p1, p1_cds = plotts(
-    df_bar[['L0', 'L1', 'L2', 'L3', '120_sec_rec']],
+    df_bar[['120_sec_rec', 'L2', 'L1', 'L0', 'L3']],
     units=['bpm'],
     x_range=DataRange1d(end=datetime.today()+pd.Timedelta('1 days'), follow='end', follow_interval=plot_window),
-    styles=['--'] * 4 + 2 * ['|'],
+    styles=['|'] + ['--'] * 4,
     alpha=0.5,
     title='120 sec HR recovery trend',
+    palette=['grey']+['#3f8dff', '#154ba6', '#e73360', 'green'],
+    bar_line_color='white',
+    line_width=2,
     ylabel='Beats',
     plot_height=325,
     plot_width=450,
@@ -256,6 +259,8 @@ df_sleep['7.5hr'] = 450
 df_sleep['time_asleep'] = df_sleep['deep'] + df_sleep['rem'] + df_sleep['light']
 df_sleep['7day_avg'] = df_sleep.set_index('date')['time_asleep'].rolling('7d', closed='right').mean().reset_index()['time_asleep']
 df_sleep['date_str'] = df_sleep['date'].dt.strftime('%a %b %d %Y')
+df_sleep['start_time'] = df_sleep['start'].dt.strftime('%I:%M %p')
+df_sleep['end_time'] = df_sleep['end'].dt.strftime('%I:%M %p')
 
 stages = ["deep", "rem", "light", "awake"]
 colors = ['#154ba6', '#3f8dff', '#7ec4ff', '#e73360']
@@ -298,12 +303,16 @@ p5, p5_cds = plotts(
     alpha=0.5,
     xvar='date',
     ys=['end_hour', 'start_hour'],
+    hover_vars=['start_time', 'end_time'],
+    hide_hovers=['start_hour', 'end_hour'],
     units=['hour'],
     x_range=p4.x_range,
     ymin=22,
-    styles=['|'],
     ylabel='Hour',
     title='Sleep schedule',
+    styles=['b'],
+    palette=['grey'], #'#154ba6', '#3f8dff', '#7ec4ff', '#e73360'
+    bounded_bar_label='sleep',
     show_plot=False
 );
 
@@ -313,7 +322,7 @@ three_lift_total = int(df_pr.query("reps==1")[movements].sum().sum())
 
 rep_pr_desc = f"""
 <div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;"> 
-<h2>&#127947;&#127997; Weight Lifting PRs</h2>
+<h2>&#127947;&#127997; Weight Lifting</h2>
 <p>The views below show lift PRs for different movements and reps. 
 My current 3 lift total is {three_lift_total} lbs. 
 My goal is to get to 1000 lbs by end of 2021. 
