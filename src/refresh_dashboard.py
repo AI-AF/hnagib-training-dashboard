@@ -82,7 +82,7 @@ def plot_cal_ts(df_ts):
     p.line('s', 'BPM', source=cds, color="black", alpha=0)
 
     band = Band(base='s', upper='BPM', source=cds, level='underlay',
-                fill_alpha=0.95, fill_color='#e73360') #ab383a
+                fill_alpha=0.99, fill_color='#ab383a') #e73360
     p.add_layout(band)
     return p, cds
 
@@ -134,10 +134,10 @@ p1, p1_cds = plotts(
     df_bar[['120_sec_rec', 'L2', 'L1', 'L0', 'L3']],
     units=['bpm'],
     x_range=DataRange1d(end=datetime.today()+pd.Timedelta('1 days'), follow='end', follow_interval=plot_window),
-    styles=['|'] + ['--'] * 4,
-    alpha=0.5,
+    styles=['|'] + ['-'] * 4,
+    alphas=[0.5, 1, 1, 1],
     title='120 sec HR recovery trend',
-    palette=['grey']+['#3f8dff', '#154ba6', '#e73360', 'green'],
+    palette=['grey']+['#3f8dff', '#7ec4ff', '#e73360', 'green'], #154ba6
     bar_line_color='white',
     line_width=2,
     ylabel='Beats',
@@ -300,7 +300,7 @@ p5, p5_cds = plotts(
     df_sleep,
     plot_height=325,
     plot_width=450,
-    alpha=0.5,
+    alphas=[0.5],
     xvar='date',
     ys=['end_hour', 'start_hour'],
     hover_vars=['start_time', 'end_time'],
@@ -321,7 +321,7 @@ movements = ['barbell_bench_press', 'back_squat', 'deadlift']
 three_lift_total = int(df_pr.query("reps==1")[movements].sum().sum())
 
 rep_pr_desc = f"""
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;"> 
+<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; height: 150px; float: left;"> 
 <h2>&#127947;&#127997; Weight Lifting</h2>
 <p>The views below show lift PRs for different movements and reps. 
 My current 3 lift total is {three_lift_total} lbs. 
@@ -405,60 +405,27 @@ p7_tabs = Tabs(tabs=tabs, tabs_location='above', margin=(0,0,0,0))
 
 header = """
 <div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;">
-<style>
-.fa {
-  padding: 10px;
-  font-size:200px;
-  width: 10px;
-  text-align: center;
-  text-decoration: none;
-}
-
-/* Add a hover effect if you want */
-.fa:hover {
-  opacity: 0.7;
-}
-
-/* Set a specific color for each brand */
-
-/* Facebook */
-.fa-facebook {
-  background: white;
-  color: #3B5998;
-}
-
-.fa-linkedin {
-  background: white;
-  color: #007bb5;
-}
-
-.fa-instagram {
-  background: white;
-  color: red;
-}
-
-.fa-github {
-  background: white;
-  color: black;
-}
-
-.fa-envelope {
-  background: white;
-  color: red;
-}
-
-</style> 
-<h1>Hasan Nagib</h1>  
+<h1>Hasan Nagib</h1> 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<a href="https://www.facebook.com/bigannasah/" class="fa fa-facebook" style="font-size:24px"></a>
-<a href="https://www.linkedin.com/in/hnagib?_l=en_US" class="fa fa-linkedin" style="font-size:24px"></a>
-<a href="https://www.instagram.com/hnagib/" class="fa fa-instagram" style="font-size:24px"></a>
-<a href="https://github.com/hnagib" class="fa fa-github" style="font-size:24px"></a>
-<a href="mailto:hasan.nagib@gmail.com?subject = Hasan's fitness data blog&body = Hello!" class="fa fa-envelope" style="font-size:24px"></a>
+<a href="https://www.linkedin.com/in/hnagib?_l=en_US" class="fa fa-linkedin" style="font-size:24px">
+</a>
+<a href="https://github.com/hnagib" class="fa fa-github" style="font-size:24px">
+</a>
+<a href="https://www.facebook.com/bigannasah/" class="fa fa-facebook" style="font-size:24px">
+</a>
+<a href="https://www.instagram.com/hnagib/" class="fa fa-instagram" style="font-size:24px">
+</a>
+<a href="mailto:hasan.nagib@gmail.com?subject = Hasan's fitness data blog&body = Hello!" class="fa fa-envelope" style="font-size:24px">
+</a>
+<a href="https://s3.amazonaws.com/hnagib.com/Hasan-Nagib-Resume.pdf" class="tooltip fa fa-file" style="font-size:24px">
+<span class="tooltiptext">Resume</span>
+</a>
 <p>
-    Welcome to my health and fitness data blog! The data is sourced from my Fitbit, Polar HR10, Wahoo
-    TickerX and WodUp.com account. The data is refreshed daily. This page is a static Bokeh dashboard
-    hosted on AWS s3. Check out my GitHub for details of the project. 
+    Welcome to my health & fitness data journal! This project was born out of my love for fitness, data & 
+    <a href="https://docs.bokeh.org/en/latest/index.html" class="url">Bokeh</a>. This is a simple static 
+    Bokeh dashboard hosted on AWS S3. The data is sourced from my Fitbit, Polar HR10, Wahoo TickerX and WodUp.com 
+    account. The data is refreshed by a daily batch job that runs on my local machine. Check out my GitHub for 
+    details of the project.
 </p>
 """
 div_header = Div(text=header)
@@ -467,11 +434,12 @@ sleep_desc = """
 <div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;">
 <p>&nbsp;</p>
 <p>&nbsp;</p>
+<p>&nbsp;</p>
 <h2>&#128564; Sleep Logs</h2>
 <p>
     Sleep data is sourced from Fitbit sleep logs. 
     My goal is to average 7.5 hours of time asleep and 9 hours time in bed.
-    Sleep start and end hours are in 24 hour format.
+    Sleep start and end hours are plotted in 24 hour format.
 </p>
 </div>
 """
@@ -481,9 +449,10 @@ hr_rec = """
 <div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;"> 
 <h2>&#127939;&#127997; Workout Heart Rate</h2>
 <p>Heart rate recovery greater than 53 bpm in 2 minutes indicates that one's biological age 
-is younger than calendar age. Greater recovery HR generally correlates with better heart health.
-The bar chart below shows my 2 minute recovery heart rate following workouts. This is calculated
-automatically using data collected from my Polar HR10 or Wahoo TickerX chest straps.   
+is younger than calendar age. Greater recovery HR generally correlates with better health. Check out this 
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5524096/#jah32178-sec-0016title" class="url">meta analysis</a> 
+for more on this. The bar chart below shows my 2 minute recovery heart rate following workouts. 
+This is calculated automatically using data collected from my Polar HR10 or Wahoo TickerX chest straps.   
 Click on any bar to see corresponding workout and HR profile.
 </p>
 </div>
@@ -508,7 +477,7 @@ hr_desc = """
 <p>
 Heart rate data is sourced from Polar HR10 and Wahoo TickerX's .fit files. 
 The .fit files are synced to Dropbox from the Wahoo iOS app and 
-parsed using the <a href="https://pypi.org/project/fitparse/">fitparse</a> python library.
+parsed using the <a href="https://pypi.org/project/fitparse/" class="url">fitparse</a> python library.
 </p>
 </div>
 """
@@ -516,7 +485,7 @@ hr_desc = Div(text=hr_desc)
 
 wod_desc="""
 <div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;">   
-<p>Workout data is sourced from my <a href="https://www.wodup.com">WodUp</a> account. The data is scraped using selenium. 
+<p>Workout data is sourced from my <a href="https://www.wodup.com" class="url">WodUp</a> account. The data is scraped using selenium. 
 WodUp currently does not have an API. 
 </p>
 </div>
@@ -541,4 +510,160 @@ output_dir = '/Users/hasannagib/Documents/s3stage/dashboards/416-dash.html'
 
 
 output_file(output_dir, title="Hasan's Data Blog")
-save(dash)
+save(dash, template=
+     """
+     {% from macros import embed %}
+
+<!DOCTYPE html>
+<html lang="en">
+  {% block head %}
+  <head>
+    {% block inner_head %}
+      <meta charset="utf-8">
+      <title>{% block title %}{{ title | e if title else "Bokeh Plot" }}{% endblock %}</title>
+      {% block preamble %}{% endblock %}
+      {% block resources %}
+        {% block css_resources %}
+          {{ bokeh_css | indent(8) if bokeh_css }}
+        {% endblock %}
+        {% block js_resources %}
+          {{ bokeh_js | indent(8) if bokeh_js }}
+        {% endblock %}
+      {% endblock %}
+      {% block postamble %}{% endblock %}
+    {% endblock %}
+  </head>
+  {% endblock %}
+  {% block body %}
+  <body>
+    {% block inner_body %}
+        <style>
+            .tooltip {
+              position: relative;
+              display: inline-block;
+              
+            }
+            
+            .tooltip .tooltiptext {
+              visibility: hidden;
+              width: 100px;
+              background-color: #555;
+              color: #fff;
+              font-family:courier;
+              font-size: 75%;
+              text-align: center;
+              border-radius: 6px;
+              padding: 5px 0;
+              position: absolute;
+              z-index: 1;
+              bottom: 20%;
+              left: 50%;
+              margin-left: 20px;
+              opacity: 0;
+              transition: opacity 0.3s;
+            }
+            
+            .tooltip .tooltiptext::after {
+              content: "";
+              position: absolute;
+              top: 0%;
+              left: 50%;
+              margin-left: -5px;
+              border-width: 5px;
+              border-style: solid;
+              border-color: #555 transparent transparent transparent;
+            }
+            
+            .tooltip:hover .tooltiptext {
+              visibility: visible;
+              opacity: 1;
+            }
+            
+            .fa {
+              padding: 10px;
+              font-size:200px;
+              width: 10px;
+              text-align: center;
+              text-decoration: none;
+            }
+            
+            /* Add a hover effect if you want */
+            .fa:hover {
+              opacity: 0.7;
+            }
+            
+            /* Set a specific color for each brand */
+            .fa-facebook {
+              background: transparent;
+              color: #3B5998;
+            }
+            
+            .fa-linkedin {
+              background: transparent;
+              color: #007bb5;
+            }
+            
+            .fa-instagram {
+              background: transparent;
+              color: red;
+            }
+            
+            .fa-github {
+              background: transparent;
+              color: black;
+            }
+            
+            .fa-envelope {
+              background: transparent;
+              color: red;
+            }
+            
+            .fa-file {
+              background: transparent;
+              color: #367da3;
+            }
+
+            a.url:link {
+              color: #e73360;
+              background-color: transparent;
+              text-decoration: none;
+            }
+    
+            a.url:visited {
+              color: #e73360;
+              background-color: transparent;
+              text-decoration: none;
+            }
+    
+            a.url:hover {
+              color: #154ba6;
+              background-color: transparent;
+              text-decoration: none;
+            }
+    
+            a.url:active {
+              color: #e73360;
+              background-color: transparent;
+              text-decoration: underline;
+            }
+            
+        </style>
+      {% block contents %}
+        {% for doc in docs %}
+          {{ embed(doc) if doc.elementid }}
+          {% for root in doc.roots %}
+            {% block root scoped %}
+              {{ embed(root) | indent(10) }}
+            {% endblock %}
+          {% endfor %}
+        {% endfor %}
+      {% endblock %}
+      {{ plot_script | indent(8) }}
+    {% endblock %}
+  </body>
+  {% endblock %}
+</html>
+"""
+     )
+
+

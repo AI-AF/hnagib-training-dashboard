@@ -9,6 +9,7 @@ def plotts(df_plot,
             ys=None,
             units=None,
             hover_vars=None,
+            hide_hovers=[None],
             x_axis_type='datetime',
             xvar='timestamp',
             styles=['-'],
@@ -18,8 +19,9 @@ def plotts(df_plot,
             title=None,
             plot_height=325,
             plot_width=450,
-            alpha=0.75,
+            alphas=[0.75],
             line_width=3,
+            bar_line_color='white',
             ylabel=None,
             xlabel=None,
             x_range=None,
@@ -27,6 +29,7 @@ def plotts(df_plot,
             legend_location='top_left',
             legend_orientation='horizontal',
             ts_format='%a %b %d %Y',
+            bounded_bar_label='bounded',
             ymin=None,
             ymax=None,
             trace=False,
@@ -89,7 +92,9 @@ def plotts(df_plot,
 #             source=cds
 #         )]
     
-    for y, color, style, width in zip(ys, itertools.cycle(palette), itertools.cycle(styles), itertools.cycle(bar_width)):
+    for y, color, style, width, alpha in zip(ys, itertools.cycle(palette),
+                                      itertools.cycle(styles), itertools.cycle(bar_width),
+                                      itertools.cycle(alphas)):
         plot_dict[y] = []
         
         if style == "--":
@@ -128,18 +133,35 @@ def plotts(df_plot,
                 x=xvar,
                 top=y,
                 fill_color=color,
+                line_color=bar_line_color,
                 width=width,
                 alpha=alpha,
                 source=cds
             ))
+
+    if "b" in style:
+        plot_dict = {}
+        plot_dict[bounded_bar_label] = []
+        plot_dict[bounded_bar_label].append(p.vbar(
+            x=xvar,
+            top=ys[0],
+            bottom=ys[1],
+            fill_color=palette[0],
+            line_color=bar_line_color,
+            width=width,
+            alpha=alpha,
+            source=cds
+        ))
 
     legend = Legend(items=[(var, plots) for var, plots in plot_dict.items()])
     p.add_layout(legend, legend_position)
     p.legend.click_policy = 'hide'
     p.legend.orientation = legend_orientation
     p.legend.location = legend_location
+    p.legend.background_fill_alpha = 0.15
+    p.legend.border_line_alpha = 0
 
-    hovers = [(y, f'@{y} {unit}') for y, unit in zip(ys, itertools.cycle(units))] \
+    hovers = [(y, f'@{y} {unit}') for y, unit in zip(list(set(ys)-set(hide_hovers)), itertools.cycle(units))]
 
     if x_axis_type == 'datetime':
         hovers += [['Date', '@ts_str']]

@@ -107,15 +107,11 @@ def main():
     df_existing = pd.read_csv('../data/sleep.csv', parse_dates=['start', 'end'])
 
     if not datetime.today().strftime('%Y-%m-%d') in list(df_existing['start'].apply(lambda x: x.strftime('%Y-%m-%d'))):
-#        try:
         fb = fitbit(email='hasan.nagib@gmail.com', password=os.environ['fitbit_password'])
         time.sleep(4)
         df_new = fb.get_sleep_data()
-        fb.browser.close()
         df = pd.concat([df_new, df_existing]).round(2).drop_duplicates()
         df.to_csv('../data/sleep.csv', index=None)
-#        except:
-#            fb.browser.close()
 
 
 if __name__ == "__main__":
