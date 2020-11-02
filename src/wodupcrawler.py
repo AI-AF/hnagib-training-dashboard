@@ -21,7 +21,7 @@ class WodUp:
         self.username = username
         chrome_options = Options()
         chrome_options.add_argument("--headless")
-        self.browser = webdriver.Chrome(chrome_driver_path, options=chrome_options)
+        self.browser = webdriver.Chrome(chrome_driver_path) #, options=chrome_options
         self.browser.get(self.url)
         self.login()
         self.raw_logs = {}

@@ -46,7 +46,7 @@ def read_ts(file):
                      ).set_index('timestamp').sort_index().reset_index()[
         ['heart_rate']
     ].rename(columns={
-        'heart_rate': pd.to_datetime(os.path.basename(file)[:-11]).strftime('%a %b %d %Y'),
+        'heart_rate': pd.to_datetime(os.path.basename(file)[:-11]).strftime('%Y-%m-%d'),
 
     })
     return df
@@ -114,6 +114,10 @@ if set(dts) - set(wods.keys()):
     urls = wu.get_session_urls(dts)
     wods = wu.get_session_wods()
 
+    for k, v in wods.items():
+        for i in range(4-len(v)):
+            wods[k].append('')
+
     # Save json
     with open('../data/session_urls.json', 'w') as outfile:
         json.dump(urls, outfile)
@@ -127,7 +131,7 @@ if set(dts) - set(wods.keys()):
 for dt in pd.date_range('2020-09-01', datetime.today()):
     dt_str = dt.strftime('%Y-%m-%d')
     if dt_str not in wods.keys():
-        wods[dt_str] = ['Rest day', '']
+        wods[dt_str] = ['Rest day', '', '', '']
 
 
 p1, p1_cds = plotts(
@@ -164,11 +168,17 @@ p3, p3_cds = plot_cal_ts(df_ts)
 
 html ="""
 <div style="width: 100%; overflow: hidden;">
-     <div style="margin-left: 50px; width: 350px; float: left;"> {A} &nbsp; {B} </div>
+     <div style="margin-left: 50px; width: 350px; float: left;"> {A} &nbsp; {B} &nbsp; {C} &nbsp; {D} </div>
 </div>
 """
 
-div = Div(text=html.format(A=wods[dts[-1]][0], B=wods[dts[-1]][1]))
+div = Div(text=html.format(
+    A=wods[dts[-1]][0],
+    B=wods[dts[-1]][1],
+    C=wods[dts[-1]][2],
+    D=wods[dts[-1]][3]
+    )
+)
 
 dp_callback = CustomJS(
     args={
@@ -180,14 +190,12 @@ dp_callback = CustomJS(
 
     code=
     """
-    console.log('div: ', cb_obj.value)
-    console.log('test: ', html.replace("{A}", wods[cb_obj.value][0]))
-
-    div.text = html.replace("{A}", wods[cb_obj.value][0]).replace("{B}", wods[cb_obj.value][1])
+    div.text = html.replace("{A}", wods[cb_obj.value][0]).replace("{B}", wods[cb_obj.value][1]).replace("{C}", wods[cb_obj.value][2]).replace("{D}", wods[cb_obj.value][3])
 
     var yval = cb_obj.value;
-    source.data['BPM'] = source.data[yval];
-    source.change.emit()
+    console.log(yval);
+    source.data['BPM'] = source.data[cb_obj.value];
+    source.change.emit();
 
     """
 )
@@ -196,12 +204,9 @@ datePicker = DatePicker(width=100, value=df_ts.columns[-3])
 datePicker.js_on_change('value', dp_callback)
 
 tap_code = """
-        console.log('DatePicker: ', dp.value)
-
         var dt_idx = p.selected.indices[0]
         var dt = p.data['ts_str'][dt_idx]
 
-        console.log('Data selected: ', dt)
         dp.value = dt
         dp.change.emit()
         p.change.emit()
@@ -216,43 +221,42 @@ p2.add_tools(TapTool(callback=tap2_callback))
 
 url = "https://www.wodup.com/timeline?date=@dt_str"
 
-button = Button(width=100, label="WodUp", button_type="success")
-button.js_on_click(CustomJS(
-    args={
-        'dp': datePicker,
-        'urls': urls
-    },
-    code="""    
-    var url = "https://www.wodup.com"
-
-    function formatDate(date) {
-    var d = new Date(date),
-        month = '' + (d.getMonth() + 1),
-        day = '' + d.getDate(),
-        year = d.getFullYear();
-
-    if (month.length < 2) 
-        month = '0' + month;
-    if (day.length < 2) 
-        day = '0' + day;
-
-    return [year, month, day].join('-');
-    }
-
-    var dt = dp.value
-    console.log('Date:', formatDate(dt))
-
-    if (typeof dt === 'string') {
-
-      window.open(url.concat(urls[formatDate(Date.parse(dt))][0]))
-    }
-    else {
-        var day = 60 * 60 * 24 * 1000;
-        window.open(url.concat(urls[formatDate(dt+day)][0]))
-    }
-    """
-)
-)
+# button = Button(width=100, label="WodUp", button_type="success")
+# button.js_on_click(CustomJS(
+#     args={
+#         'dp': datePicker,
+#         'urls': urls
+#     },
+#     code="""
+#     var url = "https://www.wodup.com"
+#
+#     function formatDate(date) {
+#     var d = new Date(date),
+#         month = '' + (d.getMonth() + 1),
+#         day = '' + d.getDate(),
+#         year = d.getFullYear();
+#
+#     if (month.length < 2)
+#         month = '0' + month;
+#     if (day.length < 2)
+#         day = '0' + day;
+#
+#     return [year, month, day].join('-');
+#     }
+#
+#     var dt = dp.value
+#
+#     if (typeof dt === 'string') {
+#
+#       window.open(url.concat(urls[formatDate(Date.parse(dt))][0]))
+#     }
+#     else {
+#         var day = 60 * 60 * 24 * 1000;
+#         window.open(url.concat(urls[formatDate(dt+day)][0]))
+#     }
+#     """
+# )
+# )
 
 df_sleep = pd.read_csv('../data/sleep.csv', parse_dates=['start', 'end', 'date'])
 df_sleep['7.5hr'] = 450
@@ -321,12 +325,13 @@ movements = ['barbell_bench_press', 'back_squat', 'deadlift']
 three_lift_total = int(df_pr.query("reps==1")[movements].sum().sum())
 
 rep_pr_desc = f"""
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; height: 150px; float: left;"> 
+<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; height: 180px; float: left;"> 
 <h2>&#127947;&#127997; Weight Lifting</h2>
 <p>The views below show lift PRs for different movements and reps. 
-My current 3 lift total is {three_lift_total} lbs. 
-My goal is to get to 1000 lbs by end of 2021. 
-Most likely path to 1000 lbs for me is: 405 lbs deadlift, 355 lbs back squat & 240 lbs bench press.
+I weigh 170 lbs and my current three lift total is {three_lift_total} lbs. 
+In terms of <a href="https://strengthlevel.com/powerlifting-standards" class="url">powerlifting standards</a>,
+I am an intermediate lifter. My goal is to get to an advanced level (i.e. 1000 lbs) by end of 2021. 
+I am hoping to get there with a 405 lbs deadlift, 355 lbs back squat & 240 lbs bench press &#129310;&#127997;
 </p>
 </div>
 """
@@ -407,19 +412,13 @@ header = """
 <div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;">
 <h1>Hasan Nagib</h1> 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<a href="https://www.linkedin.com/in/hnagib?_l=en_US" class="fa fa-linkedin" style="font-size:24px">
-</a>
-<a href="https://github.com/hnagib" class="fa fa-github" style="font-size:24px">
-</a>
-<a href="https://www.facebook.com/bigannasah/" class="fa fa-facebook" style="font-size:24px">
-</a>
-<a href="https://www.instagram.com/hnagib/" class="fa fa-instagram" style="font-size:24px">
-</a>
-<a href="mailto:hasan.nagib@gmail.com?subject = Hasan's fitness data blog&body = Hello!" class="fa fa-envelope" style="font-size:24px">
-</a>
+<a href="https://www.linkedin.com/in/hnagib?_l=en_US" class="fa fa-linkedin" style="font-size:24px"></a>
+<a href="https://github.com/hnagib" class="fa fa-github" style="font-size:24px"></a>
+<a href="https://www.facebook.com/bigannasah/" class="fa fa-facebook" style="font-size:24px"></a>
+<a href="https://www.instagram.com/hnagib/" class="fa fa-instagram" style="font-size:24px"></a>
+<a href="mailto:hasan.nagib@gmail.com?subject = Hasan's fitness data blog&body = Hello!" class="fa fa-envelope" style="font-size:24px"></a>
 <a href="https://s3.amazonaws.com/hnagib.com/Hasan-Nagib-Resume.pdf" class="tooltip fa fa-file" style="font-size:24px">
-<span class="tooltiptext">Resume</span>
-</a>
+<span class="tooltiptext">Resume</span></a>
 <p>
     Welcome to my health & fitness data journal! This project was born out of my love for fitness, data & 
     <a href="https://docs.bokeh.org/en/latest/index.html" class="url">Bokeh</a>. This is a simple static 
