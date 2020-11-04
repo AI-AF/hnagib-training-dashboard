@@ -22,7 +22,7 @@ class WahooTickrX:
         for record in self.fitfile.get_messages('record'):
             records = {}
             for record_data in record: 
-                if record_data.name in ['heart_rate', 'timestamp']:
+                if record_data.name in ['heart_rate', 'calories', 'timestamp']:
                     records[record_data.name] = record_data.value
             data.append(records)
         return pd.DataFrame(data).set_index('timestamp').iloc[:-20] #.tz_localize('GMT').tz_convert('EST')

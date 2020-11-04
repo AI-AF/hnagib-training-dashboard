@@ -2,6 +2,7 @@ from bokeh.io import show, output_notebook
 from bokeh.models import ColumnDataSource, HoverTool, Legend
 from bokeh.models.callbacks import CustomJS
 from bokeh.plotting import figure
+from bokeh.models import Range1d, Step
 import itertools
 
     
@@ -25,20 +26,21 @@ def plotts(df_plot,
             ylabel=None,
             xlabel=None,
             x_range=None,
+            y_range=None,
             legend_position='below',
             legend_location='top_left',
             legend_orientation='horizontal',
             ts_format='%a %b %d %Y',
             bounded_bar_label='bounded',
-            ymin=None,
-            ymax=None,
-            trace=False,
-            show_plot=True
+            show_plot=True,
+            tools='',
+            active_scroll=None,
+            toolbar_location='above'
            ):
     
     if ys is None:
         ys=df_plot.columns
-    
+
     if units is None:
         units=['']*len(ys)
     
@@ -50,13 +52,20 @@ def plotts(df_plot,
 
     cds = ColumnDataSource(data=df_plot)
 
+    if y_range: 
+        y_range = Range1d(y_range[0], y_range[1])        
 
     p = figure(
         x_axis_type=x_axis_type,
         plot_height=plot_height,
         plot_width=plot_width,
         x_range=x_range,
-        title=title
+        y_range=y_range,
+        title=title,
+        tools=tools,
+        active_scroll=active_scroll,
+        active_drag=None,
+        toolbar_location=toolbar_location
     )
 
     # Define a DataSource
@@ -74,11 +83,6 @@ def plotts(df_plot,
       line_source.change.emit();
     }
     '''
-    if ymin is None:
-        ymin = df_plot[ys].min().min()
-        
-    if ymax is None:
-        ymax = df_plot[ys].max().max()
 
     plot_dict = {}
     
@@ -139,6 +143,10 @@ def plotts(df_plot,
                 source=cds
             ))
 
+        if "L" in style:
+            glyph = Step(x=xvar, y=y, line_color=color, line_width=line_width, mode="after")
+            plot_dict[y].append(p.add_glyph(cds, glyph))
+
     if "b" in style:
         plot_dict = {}
         plot_dict[bounded_bar_label] = []
@@ -168,7 +176,6 @@ def plotts(df_plot,
     elif x_axis_type == 'linear':
         hovers += [[xvar, f'@{xvar}']]
 
-
     if hover_vars is not None:
         hovers += [[h, f'@{h}'] for h in hover_vars]
     
@@ -180,18 +187,6 @@ def plotts(df_plot,
             line_policy='nearest'
         )
     )
-
-    if trace:
-        rl = p.segment(x0='x', y0=ymin, x1='x', y1=ymax, color='grey', line_width=1, source=line_source)
-        p.add_tools(
-            HoverTool(
-                tooltips=None,
-                callback=CustomJS(
-                    code=js,
-                    args={'line_source': line_source}
-                )
-            )
-        )
 
     p.yaxis.axis_label = ylabel
     p.xaxis.axis_label = xlabel
