@@ -191,7 +191,7 @@ sleep = []
 
 df_sleep['dt'] = df_sleep['start'].dt.strftime('%Y-%m-%d')
 
-for f in glob.glob('/Users/hasannagib/Documents/s3stage/wahoo/heartrate_ts/*.csv'):
+for f in glob.glob(f'{fitetl.datadir_hrts}*.csv'):
     dt = pd.to_datetime(os.path.basename(f)[:10])
     date.append(dt)
     cals.append(max(pd.read_csv(f)['calories']))
