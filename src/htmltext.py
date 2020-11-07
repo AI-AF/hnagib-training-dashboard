@@ -214,10 +214,10 @@ div_intro = """
 <div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;">
 <p>
     Welcome to my health & fitness data journal! This project was born out of my love for fitness, data & 
-    <a href="https://docs.bokeh.org/en/latest/index.html" class="url">Bokeh</a>. This is a Bokeh dashboard hosted on AWS S3. 
-    The data is sourced from my Fitbit, Polar HR10, Wahoo TickerX and <a href="https://www.wodup.com" class="url">WodUp</a> 
-    account. The data is refreshed by a daily batch job. Check out the GitHub <a class="url" href="https://github.com/hnagib/hnagib-training-dashboard">repo</a> for 
-    details of the project.
+    <a href="https://docs.bokeh.org/en/latest/index.html" class="url">Bokeh</a>. The goal of this project is to aggregate and visualize 
+    all of my health and fitness data from various sources. The data is sourced from my Fitbit, Polar HR10, Wahoo TickerX and 
+    <a href="https://www.wodup.com" class="url">WodUp</a> account. The data is refreshed by a daily batch job. This is a Bokeh dashboard hosted on AWS S3. 
+    Check out the GitHub <a class="url" href="https://github.com/hnagib/hnagib-training-dashboard">repo</a> for details of the project.
 </p>
 """
 
