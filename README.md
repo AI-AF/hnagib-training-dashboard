@@ -1,4 +1,4 @@
-## [My Data Blog](hnagib.com)
+## [hnagib.com](hnagib.com)
 
 Welcome to my health & fitness data journal project! This project was born out of my love for fitness, data & Bokeh. This is a simple static Bokeh dashboard hosted on AWS S3. The data is sourced from my Fitbit, Polar HR10, Wahoo TickerX and WodUp account. The data is refreshed by a daily batch job. 
 
