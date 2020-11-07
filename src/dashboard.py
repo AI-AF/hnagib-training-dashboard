@@ -4,7 +4,7 @@ import time
 import dask
 import pandas as pd
 import numpy as np
-from plotutils import plotts, gen_plot_df, plotcal, plot_hr_profile, plot_sleep_stages
+from plotutils import plotts, gen_cal_plot_df, plotcal, plot_hr_profile, plot_sleep_stages
 from bokeh.io import save, output_file
 from bokeh.plotting import figure
 from bokeh.layouts import Column, Row
@@ -52,7 +52,7 @@ df_pr = pd.read_csv('../../WodUp-Scraper/data/hasannagib-pr-table.csv').query('r
 
 plot_window = pd.Timedelta('70 days')
 
-p1, p1_cds = plotts(
+plot_hr_rcvry, plot_hr_rcvry_cds = plotts(
     df_hr_rcvry[['120_sec_rec', 'L2', 'L1', 'L0', 'L3']],
     units=['bpm'],
     x_range=DataRange1d(end=datetime.today()+pd.Timedelta('1 days'), follow='end', follow_interval=plot_window),
@@ -72,13 +72,13 @@ p1, p1_cds = plotts(
 );
 
 
-p2, p2_cds = plotts(
+plot_hr_zones, plot_hr_zones_cds = plotts(
     (df_hr_rcvry.rolling(7).sum().dropna() / 60),
     ys=['174_220', '152_173', '138_151'],
     styles=['o-'],
     units=['min'],
     title='HR zones (7 day rolling sum)',
-    x_range=p1.x_range,
+    x_range=plot_hr_rcvry.x_range,
     ylabel='Minutes',
     tools='xwheel_pan,pan,reset',
     active_scroll='xwheel_pan',
@@ -87,13 +87,13 @@ p2, p2_cds = plotts(
     show_plot=False
 );
 
-p3, p3_cds = plot_hr_profile(df_hr_profile, x='s', y='BPM')
+plot_hr_profile, plot_hr_profile_cds = plot_hr_profile(df_hr_profile, x='s', y='BPM')
 
 
-p4, p4_cds = plot_sleep_stages(df_sleep, plot_window)
+plot_sleep_stages, plot_sleep_stages_cds = plot_sleep_stages(df_sleep, plot_window)
 
 
-p5, p5_cds = plotts(
+plot_sleep_schedule, plot_sleep_schedule_cds = plotts(
     df_sleep,
     plot_height=400,
     plot_width=800,
@@ -103,7 +103,7 @@ p5, p5_cds = plotts(
     hover_vars=['start_time', 'end_time'],
     hide_hovers=['start_hour', 'end_hour'],
     units=['hour'],
-    x_range=p4.x_range,
+    x_range=plot_sleep_stages.x_range,
     y_range=[2, 24],
     ylabel='24-Hour',
     title='Sleep schedule',
@@ -116,11 +116,9 @@ p5, p5_cds = plotts(
 );
 
 movements = ['deadlift', 'barbell_bench_press', 'back_squat', 'shoulder_press']
-three_lift_total = int(df_pr.query("reps==1")[
-    ['barbell_bench_press', 'back_squat', 'deadlift']
-].sum().sum())
+three_lift_total = int(df_pr.query("reps==1")[['barbell_bench_press', 'back_squat', 'deadlift']].sum().sum())
 
-p6, p6_cds = plotts(
+plot_rep_prs, plot_rep_prs_cds = plotts(
     df_pr,
     ys=movements,
     hover_vars=[f'date_{mvmt}' for mvmt in movements],
@@ -141,13 +139,13 @@ p6, p6_cds = plotts(
 
 )
 
-p6_tabs = Tabs(tabs=[Panel(child=p6, title="n-Rep PR")])
+plot_rep_prs_tabs = Tabs(tabs=[Panel(child=plot_rep_prs, title="n-Rep PR")])
 
 
 tabs = []
 for i in [1, 2, 3, 4, 5]:
 
-    df_plot = []
+    pr_hist = []
     for movement in movements:
         df_hist = pd.read_csv(f'../../WodUp-Scraper/data/hasannagib-{movement.replace("_", "-")}.csv', parse_dates=['date'])
         df = df_hist.query(f'(reps>={i})').sort_values('date')
@@ -156,15 +154,15 @@ for i in [1, 2, 3, 4, 5]:
             pd.date_range('2019-10-01', datetime.today())
         )
         dfi.index.name='date'
-        df_plot.append(dfi)
+        pr_hist.append(dfi)
     
-    plot_df = pd.concat(df_plot).dropna(thresh=1).sort_index().fillna(method='bfill').fillna(method='ffill')
-    add = plot_df.iloc[-1,:]
+    plot_pr_hist = pd.concat(pr_hist).dropna(thresh=1).sort_index().fillna(method='bfill').fillna(method='ffill')
+    add = plot_pr_hist.iloc[-1,:]
     add.name = datetime.today()
-    plot_df = plot_df.append(add)
+    plot_pr_hist = plot_pr_hist.append(add)
 
     p, _ = plotts(
-        plot_df,
+        plot_pr_hist,
         xvar='date',
         styles=['oL'],
         units=['lbs'],
@@ -185,7 +183,7 @@ for i in [1, 2, 3, 4, 5]:
 
     tabs.append(Panel(child=p, title=f"{i} RM"))
 
-p7_tabs = Tabs(tabs=tabs, tabs_location='above', margin=(0,0,0,0))
+plot_pr_history_tabs = Tabs(tabs=tabs, tabs_location='above', margin=(0,0,0,0))
 
 #########################################################################################################
 
@@ -214,11 +212,11 @@ for f in glob.glob('/Users/hasannagib/Documents/s3stage/wahoo/heartrate_ts/*.csv
 
 ##################################################################################################
 
-pcal_30_df = gen_plot_df(date, cals, wods_text, sleep, datetime.today() - pd.Timedelta('31 d'), datetime.today())
+pcal_30_df = gen_cal_plot_df(date, cals, wods_text, sleep, datetime.today() - pd.Timedelta('31 d'), datetime.today())
 pcal_30, pcal_30_cds = plotcal(pcal_30_df)
 
 
-pcal_df = gen_plot_df(date, cals, wods_text, sleep, datetime.today() - pd.Timedelta('165 d'), datetime.today())
+pcal_df = gen_cal_plot_df(date, cals, wods_text, sleep, datetime.today() - pd.Timedelta('165 d'), datetime.today())
 pcal, pcal_cds = plotcal(
     pcal_df,
     weekdays=['Sat', 'Fri', 'Thu', 'Wed', 'Tue', 'Mon', 'Sun'],
@@ -261,7 +259,7 @@ div_wodup = Div(text=htmltext.div_wodup.format(
 
 dp_callback = CustomJS(
     args={
-        'source': p3_cds,
+        'source': plot_hr_profile_cds,
         'div': div_wodup,
         'wods': wods,
         'html': htmltext.div_wodup
@@ -289,9 +287,9 @@ hr_tap_code = """
     r.change.emit()
 """
 
-tap1_callback = CustomJS(args={'p': p1_cds, 'r': p2, 'dp': datePicker}, code=hr_tap_code)
+tap_plot_hr_rcvry_callback = CustomJS(args={'p': plot_hr_rcvry_cds, 'r': plot_hr_zones, 'dp': datePicker}, code=hr_tap_code)
 
-p1.add_tools(TapTool(callback=tap1_callback))
+plot_hr_rcvry.add_tools(TapTool(callback=tap_plot_hr_rcvry_callback))
 
 url = "https://www.wodup.com/timeline?date=@dt_str"
 
@@ -305,10 +303,10 @@ cal_tap_code = """
     r.change.emit()
 """
 
-tap_cal_callback = CustomJS(args={'p': pcal_30_cds, 'r': p2, 'dp': datePicker}, code=cal_tap_code)
+tap_cal_callback = CustomJS(args={'p': pcal_30_cds, 'r': plot_hr_zones, 'dp': datePicker}, code=cal_tap_code)
 pcal_30.add_tools(TapTool(callback=tap_cal_callback))
 
-tap_cal_callback = CustomJS(args={'p': pcal_cds, 'r': p2, 'dp': datePicker}, code=cal_tap_code)
+tap_cal_callback = CustomJS(args={'p': pcal_cds, 'r': plot_hr_zones, 'dp': datePicker}, code=cal_tap_code)
 pcal.add_tools(TapTool(callback=tap_cal_callback))
 
 #########################################################################################################
@@ -338,7 +336,7 @@ dash = Column(
                     Div(text=htmltext.div_workout_cal), 
                     Row(space('100'), pcal_30), 
                     Div(text=htmltext.div_hr_profile), 
-                    Row(space('30'), p3), 
+                    Row(space('30'), plot_hr_profile), 
                 ),
                 Column(
                     Div(text=htmltext.div_wod_logs), 
@@ -353,12 +351,12 @@ dash = Column(
                 Row(
                 Column(
                     Div(text=htmltext.div_hr_rcvry), 
-                    Row(space('30'), p1),
-                    Row(space('30'), p3)
+                    Row(space('30'), plot_hr_rcvry),
+                    Row(space('30'), plot_hr_profile)
                 ),
                 Column(
                     Div(text=htmltext.div_hr_zones), 
-                    Row(space('30'), p2)
+                    Row(space('30'), plot_hr_zones)
                 )
             )), 
             title="Heart Rate"
@@ -368,16 +366,16 @@ dash = Column(
             child=Column(
                 Div(text=htmltext.div_weight_lifting.format(three_lift_total)), 
                 Div(text=htmltext.div_lift_total.format(three_lift_total)),
-                Row(space('30'), p7_tabs),
-                Row(space('30'), p6), 
+                Row(space('30'), plot_pr_history_tabs),
+                Row(space('30'), plot_rep_prs), 
             ), 
             title="Weight Lifting"
         ),
         Panel(
             child=Column(
                 Div(text=htmltext.div_sleep),
-                Row(space('30'), p4), 
-                Row(space('30'), p5)
+                Row(space('30'), plot_sleep_stages), 
+                Row(space('30'), plot_sleep_schedule)
             ), 
             title="Sleep"
         ),             
