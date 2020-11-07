@@ -212,42 +212,6 @@ def calendar_array(dates, data):
     calendar[i, j] = data
     return i, j, calendar
 
-def gen_plot_df(date, cals, wods, sleep, start, end):
-    df = pd.DataFrame({
-        'date': date,
-        'cals': cals,
-        'sleep': sleep,
-        'A': [w[0] for w in wods],
-        'B': [w[1] for w in wods],
-        'C': [w[2] for w in wods],
-        'D': [w[3] for w in wods],
-    }).set_index('date')
-
-    df = df.reindex(pd.date_range(pd.to_datetime('2019-01-01'), max(date))).fillna(
-        {'cals': 0, 'A': '', 'B': '', 'C': '', 'D': ''}
-    )[start:end]
-
-    dates = df.index
-    cal = calendar_array(df.index, df['cals'].values)
-    weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-
-    df = pd.DataFrame({
-        'dt': dates,
-        'A': df['A'],
-        'B': df['B'],
-        'C': df['C'],
-        'D': df['D'],
-        'sleep_hr': [f"{n:02}" for n in (df['sleep'].fillna(0) // 60).astype(int)],
-        'sleep_min': [f"{n:02}" for n in (df['sleep'].fillna(0) % 60).astype(int)],
-        'Date': [dt.strftime('%Y-%m-%d') for dt in dates],
-        'dom': [dt.strftime('%d') for dt in dates],
-        'Day': [weekdays[i] for i in cal[1]],
-        'Week': [f"{i}" for i in cal[0]],
-        'Cals': cal[2][~np.isnan(cal[2])],
-    })
-
-    return df
-
 
 def plot_hr_profile(df_ts, x='s', y='BPM'):
     p = figure(
@@ -316,6 +280,44 @@ def plot_sleep_stages(df_sleep, plot_window):
     p.yaxis.axis_label = 'Hours'
 
     return p, data
+
+
+def gen_cal_plot_df(date, cals, wods, sleep, start, end):
+    df = pd.DataFrame({
+        'date': date,
+        'cals': cals,
+        'sleep': sleep,
+        'A': [w[0] for w in wods],
+        'B': [w[1] for w in wods],
+        'C': [w[2] for w in wods],
+        'D': [w[3] for w in wods],
+    }).set_index('date')
+
+    df = df.reindex(pd.date_range(pd.to_datetime('2019-01-01'), max(date))).fillna(
+        {'cals': 0, 'A': '', 'B': '', 'C': '', 'D': ''}
+    )[start:end]
+
+    dates = df.index
+    cal = calendar_array(df.index, df['cals'].values)
+    weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+    df = pd.DataFrame({
+        'dt': dates,
+        'A': df['A'],
+        'B': df['B'],
+        'C': df['C'],
+        'D': df['D'],
+        'sleep_hr': [f"{n:02}" for n in (df['sleep'].fillna(0) // 60).astype(int)],
+        'sleep_min': [f"{n:02}" for n in (df['sleep'].fillna(0) % 60).astype(int)],
+        'Date': [dt.strftime('%Y-%m-%d') for dt in dates],
+        'dom': [dt.strftime('%d') for dt in dates],
+        'Day': [weekdays[i] for i in cal[1]],
+        'Week': [f"{i}" for i in cal[0]],
+        'Cals': cal[2][~np.isnan(cal[2])],
+    })
+
+    return df
+
 
 def plotcal(
     df, 
