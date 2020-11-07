@@ -139,9 +139,6 @@ plot_rep_prs, plot_rep_prs_cds = plotts(
 
 )
 
-plot_rep_prs_tabs = Tabs(tabs=[Panel(child=plot_rep_prs, title="n-Rep PR")])
-
-
 tabs = []
 for i in [1, 2, 3, 4, 5]:
 
