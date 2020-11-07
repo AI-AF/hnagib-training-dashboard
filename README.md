@@ -4,7 +4,7 @@ Welcome to my health & fitness data journal project! This project was born out o
 
 Why did I go through the trouble to aggregate all this data from different devices and services? What's the point? For me this is a tool to help keep me motivated and accountable. Now that I have put in so much effort into visualizing my data, I guess I have to keep working out to produce more data to visualize... 💪🏽🤓 
 
-[<img width=600 src="https://github.com/hnagib/training-dashboard/blob/master/img/dash-demo.png">](http://hnagib.com)
+[<img width=600 src="https://github.com/hnagib/training-dashboard/blob/master/img/dash-demo-sleep.png">](http://hnagib.com)
 
 
 :open_file_folder: Repo Organization
