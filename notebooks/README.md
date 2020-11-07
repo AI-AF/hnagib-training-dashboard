@@ -1,3 +1,3 @@
 # Notebooks
 
-[hn-hr-dataviz.ipynb](https://nbviewer.jupyter.org/github/AI-AF/hnagib-training-dashboard/blob/master/notebooks/hn-hr-dataviz.ipynb?flush_cache=true)
+[hn-calendar-plots.ipynb](https://nbviewer.jupyter.org/github/hnagib/hnagib-training-dashboard/blob/master/notebooks/hn-calendar-plots.ipynb)
