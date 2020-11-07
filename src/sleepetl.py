@@ -7,6 +7,9 @@ from datetime import datetime
 from selenium.webdriver.chrome.options import Options
 
 
+datadir = '/Users/hasannagib/Documents/s3stage/fitbit/sleep.csv'
+
+
 class fitbit:
 
     def __init__(self, email, password, chrome_driver_path='../src/chromedriver'):
@@ -103,15 +106,34 @@ class fitbit:
         return df
 
 
+def read_sleep_plot_df(datadir=datadir):
+    df_sleep = pd.read_csv(datadir, parse_dates=['start', 'end', 'date'])
+    stages = ["deep", "rem", "light", "awake"]
+
+    for s in stages:
+        df_sleep[s] = df_sleep[s]/60
+
+    sleep_thresholds = [7,8,9]
+
+    for t in sleep_thresholds:
+        df_sleep[f'{t}hr'] = t
+
+    df_sleep['time_asleep'] = df_sleep['deep'] + df_sleep['rem'] + df_sleep['light']
+    df_sleep['7day_avg'] = df_sleep.set_index('date')['time_asleep'].rolling('7d', closed='right').mean().reset_index()['time_asleep']
+    df_sleep['date_str'] = df_sleep['date'].dt.strftime('%a %b %d %Y')
+    df_sleep['start_time'] = df_sleep['start'].dt.strftime('%I:%M %p')
+    df_sleep['end_time'] = df_sleep['end'].dt.strftime('%I:%M %p')
+    return df_sleep
+
 def main():
-    df_existing = pd.read_csv('../data/sleep.csv', parse_dates=['start', 'end'])
+    df_existing = pd.read_csv(datadir, parse_dates=['start', 'end'])
 
     if not datetime.today().strftime('%Y-%m-%d') in list(df_existing['start'].apply(lambda x: x.strftime('%Y-%m-%d'))):
         fb = fitbit(email='hasan.nagib@gmail.com', password=os.environ['fitbit_password'])
         time.sleep(4)
         df_new = fb.get_sleep_data()
         df = pd.concat([df_new, df_existing]).round(2).drop_duplicates()
-        df.to_csv('../data/sleep.csv', index=None)
+        df.to_csv(datadir, index=None)
 
 
 if __name__ == "__main__":

@@ -24,14 +24,20 @@ bokeh_template = """
 	  <body>
 	    {% block inner_body %}
 	        <style>
+	        	.bk {
+	                style=font-family:helvetica;
+	                font-size:12px; 
+	                color:grey; 
+	            }
 	            .text {
-	                style=font-family:courier; 
+	                style=font-family:helvetica; 
 	                color:grey; 
 	                float: left;
 	            }
 	            
 	            .para {
-	                style=font-family:courier; 
+	                style=font-family:helvetica;
+	                font-size:12px; 
 	                color:grey; 
 	                margin-left: 40px; 
 	                width: 400px; 
@@ -49,8 +55,8 @@ bokeh_template = """
 	              width: 100px;
 	              background-color: #555;
 	              color: #fff;
-	              font-family:courier;
-	              font-size: 75%;
+	              font-family:helvetica;
+	              font-size: 12x;
 	              text-align: center;
 	              border-radius: 6px;
 	              padding: 5px 0;
@@ -167,32 +173,32 @@ bokeh_template = """
 
 div_space = '<div style="width: {width}px; height: 10px;"></div>'
 
+#	<span style='text-align: center; font-size:50px;'>&nbsp;&#128170;&#127997;&#129299;</span>
 div_conclusion = """
-<div class="para"> 
-	<span style='text-align: center; font-size:50px;'>&nbsp;&#128170;&#127997;&#129299;</span>
-		<p> 
-		So why did I go through the trouble to aggregate all this data from different devices and services?
-		What's the point? For me this is a tool to help keep me motivated and accountable. Now that I have put 
-		in so much effort into visualizing my data, I guess I have to keep working out to 
-		produce more data to visualize... ¯\_(ツ)_/¯
-	</p>
+<div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;">
+<p> 
+	Why did I go through the trouble to aggregate all this data from different devices and services?
+	What's the point? For me this is a tool to help keep me motivated and accountable. Now that I have put 
+	in so much effort into visualizing my data, I guess I have to keep working out to 
+	produce more data to visualize... &#128170;&#127997;&#129299; ¯\_(ツ)_/¯
+</p>
 </div>
 """
 
 div_workout_cal = """
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 450px; float: left;"> 
+<div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;"> 
 	<h2>&#128197; Workout Calendar</h2>
 	<p> 
-		I have experimented with the 3 days on and 1 day off pattern. Unfortunately, most CrossFit gyms are 
-		on a 5 days on and 2 days off pattern. I also like this for consistency and routine. This way I always get
-		rest days on the weekends. The calendar plot below shows a heatmap of calories burned on a given day. Hover over 
-		or tap a date to see details of the workout.
+		I usually workout Mon-Fri and take rest days on weekends. I have tried the 3 days on and 2 days off
+		pattern as well. Although I liked that pattern better, the 5 days on 2 days off pattern works best
+		with my schedule. Most gyms are also on this pattern. The calendar plot below shows a heatmap of 
+		calories burned on a given day. Hover over or tap a date to see details of the workout.
 	</p>
 </div>
 """
 
 div_header = """
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; float: left;">
+<div class="header" style="style=font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 400px; float: left;">
 <h1>Hasan Nagib</h1> 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <a href="https://www.linkedin.com/in/hnagib?_l=en_US" class="fa fa-linkedin" style="font-size:24px"></a>
@@ -205,29 +211,18 @@ div_header = """
 """
 
 div_intro = """
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 450px; float: left;">
+<div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;">
 <p>
     Welcome to my health & fitness data journal! This project was born out of my love for fitness, data & 
     <a href="https://docs.bokeh.org/en/latest/index.html" class="url">Bokeh</a>. This is a simple static 
-    Bokeh dashboard hosted on AWS S3. The data is sourced from my Fitbit, Polar HR10, Wahoo TickerX and WodUp.com 
-    account. The data is refreshed by a daily batch job that runs on my local machine. Check out my GitHub for 
+    Bokeh dashboard hosted on AWS S3. The data is sourced from my Fitbit, Polar HR10, Wahoo TickerX and <a href="https://www.wodup.com" class="url">WodUp</a> 
+    account. The data is refreshed by a daily batch job. Check out my GitHub for 
     details of the project.
 </p>
 """
 
-div_sleep = """
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 450px; float: left;">
-<h2>&#128564; Sleep Logs</h2>
-<p>
-    Sleep data is sourced from Fitbit sleep logs. 
-    My goal is to average 7.5 hours of time asleep and 9 hours time in bed.
-    Sleep start and end hours are plotted in 24 hour format.
-</p>
-</div>
-"""
-
 div_hr_rcvry = """
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 450px; float: left;"> 
+<div style="style=font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;"> 
 <h2>&#127939;&#127997; Workouts & Heart Rate</h2>
 <p>Heart rate recovery greater than 53 bpm in 2 minutes indicates that one's biological age 
 is younger than calendar age. Greater recovery HR generally correlates with better health. Check out this 
@@ -241,7 +236,7 @@ Click on any bar to see corresponding workout and HR profile.
 
 # <p>&nbsp;</p>
 div_hr_zones = """
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 450px; float: left;">   
+<div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;">   
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>I also find it useful to monitor time spend in different HR zones. This can help guide my own programming 
@@ -253,9 +248,10 @@ peak HR zone around or under 30-45 minutes depending on the goal of a given prog
 
 
 div_hr_profile = """
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 450px; float: left;">   
+<div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;">   
 <p>
-Heart rate data is sourced from Polar HR10 and Wahoo TickerX's .fit files. 
+Heart rate data is sourced from <a class="url" href="https://www.polar.com/ca-en/products/accessories/h10_heart_rate_sensor">Polar HR10</a> 
+and <a class="url" href="https://www.wahoofitness.com/devices/heart-rate-monitors/tickr-x/buy">Wahoo TickerX's</a> .fit files. 
 The .fit files are synced to Dropbox from the Wahoo iOS app and 
 parsed using the <a href="https://pypi.org/project/fitparse/" class="url">fitparse</a> python library.
 </p>
@@ -264,17 +260,17 @@ parsed using the <a href="https://pypi.org/project/fitparse/" class="url">fitpar
 
 
 div_wod_logs="""
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 450px; float: left;">   
+<div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;">   
 <h2>&#128217; WOD Logs</h2>
 <p>I use <a href="https://www.wodup.com" class="url">WodUp</a> to log my workouts. Unfortunately WodUp currently does 
 not have an API to retrieve this data. Workout data is sourced from my <a href="https://www.wodup.com" class="url">WodUp</a> account. 
-The data is scraped using selenium. Pick a date to see the WOD and the corresponding HR profile. 
+The data is scraped using <a class="url" href="https://pypi.org/project/selenium/">selenium</a>. Pick a date to see the WOD and the corresponding HR profile. 
 </p>
 </div>
 """
 
 div_weight_lifting = """
-<div style="style=font-family:courier; color:grey; margin-left: 40px; width: 400px; height: 180px; float: left;"> 
+<div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;"> 
 <h2>&#127947;&#127997; Weight Lifting</h2>
 <p>The views below show lift PRs for different movements and reps. 
 I currently weigh ~170 lbs and my three lift total is {} lbs. 
@@ -285,19 +281,30 @@ I am hoping to get there with a 405 lbs deadlift, 355 lbs back squat & 240 lbs b
 </div>
 """
 
+# <p>&nbsp;</p>
+# <p>&nbsp;</p>
 div_lift_total = """
-<div style="style=font-family:courier; text-align: center;color:grey; margin-left: 40px; width: 400px; float: left;"> 
+<div style="font-size:12px; font-family:helvetica; text-align: left;color:grey; margin-left: 40px; width: 400px; float: left;"> 
 <h2>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
 <span style="color:#154ba6">Bench</span> +
 <span style="color:#3f8dff">Squat</span> + 
 <span style="color:#7ec4ff">Deadlift</span> = 
 <span style="color:#e73360">{}</span> lbs</h2>
 </div"""
 
+div_sleep = """
+<div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;">
+<h2>&#128564; Sleep Logs</h2>
+<p>
+    Sleep data is sourced from Fitbit sleep logs. 
+    My goal is to average 7.5 hours of time asleep and 9 hours time in bed.
+    Sleep start and end hours are plotted in 24 hour format.
+</p>
+</div>
+"""
+
 div_wodup = """
-<div style="width: 100%; overflow: hidden;">
+<div style="font-size:12px; font-family:helvetica; width: 100%; overflow: hidden;">
      <div style="margin-left: 50px; width: 350px; float: left;"> 
      {A} &nbsp; 
      {B} &nbsp;

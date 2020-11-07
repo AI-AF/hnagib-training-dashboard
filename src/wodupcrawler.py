@@ -3,6 +3,11 @@ from selenium import webdriver
 from lxml import html
 import time
 from selenium.webdriver.chrome.options import Options
+import json
+from datetime import datetime
+import os
+
+datadir = '/Users/hasannagib/Documents/s3stage/wodup/'
 
 
 class WodUp:
@@ -64,20 +69,78 @@ class WodUp:
 
                 if len(urls) > 0:
                     self.session_urls[dt] = urls
+                else:
+                    self.session_urls[dt] = None
+
         return self.session_urls
 
     def get_session_wods(self):
         for k, v in self.session_urls.items():
             if k not in self.session_wods.keys():
                 wods = []
-                for url in v:
-                    self.browser.get('https://wodup.com' + url)
-                    time.sleep(1.5)
-                    e = self.browser.find_element_by_xpath("//div[@id='WODUP_ACTIVITY_DETAIL_SELECTED_ITEM_ID']/a/div")
-                    wods.append(e.get_attribute('innerHTML'))
+                if v:
+                    for url in v:
+                        self.browser.get('https://wodup.com' + url)
+                        time.sleep(1.5)
+                        e = self.browser.find_element_by_xpath("//div[@id='WODUP_ACTIVITY_DETAIL_SELECTED_ITEM_ID']/a/div")
+                        wods.append(e.get_attribute('innerHTML'))
+                else:
+                    wods = ['', '', '', '']
 
-                if len(wods) > 0:
-                    self.session_wods[k] = wods
-                    self.session_wods[pd.to_datetime(k).strftime('%a %b %d %Y')] = wods
+                self.session_wods[k] = wods
 
         return self.session_wods
+
+
+def get_latest_wodup_log_date(wods):
+    dts = sorted(wods.keys())
+    latest_wodup_log_dt = dts[-1]
+
+    i = -1
+    while wods[latest_wodup_log_dt] == ['', '', '', '']: 
+        i -= 1
+        latest_wodup_log_dt = dts[i]
+
+    return latest_wodup_log_dt
+
+
+def main():
+    with open(f'{datadir}session_urls.json') as json_file:
+        urls = json.load(json_file)
+
+    with open(f'{datadir}session_wods.json') as json_file:
+        wods = json.load(json_file)
+
+    # Get list of dates to look urls for
+    dts = [dt.strftime('%Y-%m-%d') for dt in pd.date_range('2019-09-16', datetime.today())]
+
+    if set(dts) - set(wods.keys()):
+        wu = WodUp(
+            email='hasan.nagib@gmail.com',
+            password=os.environ['wodify_password'],
+            username='hasannagib'
+        )
+
+        wu.session_urls = urls
+        wu.session_wods = wods
+
+        # Add missing urls
+        urls = wu.get_session_urls(dts)
+        with open(f'{datadir}session_urls.json', 'w') as outfile:
+            json.dump(urls, outfile)
+        
+        # Get wods from urls
+        wods = wu.get_session_wods()
+        for k, v in wods.items():
+            if len(v) < 4:
+                for i in range(4-len(v)):
+                    wods[k].append('')
+
+        with open(f'{datadir}session_wods.json', 'w') as outfile:
+            json.dump(wods, outfile)
+
+
+        wu.browser.quit()
+
+if __name__ == '__main__':
+    main()
