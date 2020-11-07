@@ -202,17 +202,6 @@ def plotts(df_plot,
     return p, cds
 
 
-def calendar_array(dates, data):
-    i, j = zip(*[d.isocalendar()[1:] for d in dates])
-    i = np.array(i) - min(i)
-    j = np.array(j) - 1
-    ni = max(i) + 1
-
-    calendar = np.nan * np.zeros((ni, 7))
-    calendar[i, j] = data
-    return i, j, calendar
-
-
 def plot_hr_profile(df_ts, x='s', y='BPM'):
     p = figure(
         width=450,
@@ -282,6 +271,17 @@ def plot_sleep_stages(df_sleep, plot_window):
     return p, data
 
 
+def calendar_array(dates, data):
+    i, j = zip(*[d.isocalendar()[1:] for d in dates])
+    i = np.array(i) - min(i)
+    j = np.array(j) - 1
+    ni = max(i) + 1
+
+    calendar = np.nan * np.zeros((ni, 7))
+    calendar[i, j] = data
+    return i, j, calendar
+
+
 def gen_cal_plot_df(date, cals, wods, sleep, start, end):
     df = pd.DataFrame({
         'date': date,
@@ -323,6 +323,7 @@ def plotcal(
     df, 
     x='Day',
     y='Week',
+    day_of_month_column='dom',
     text_color='grey',
     text_font='courier',
     palette=OrRd[9],
@@ -361,13 +362,13 @@ def plotcal(
     if mode == 'calendar':
         range_args ={
             'x_range':weekdays,
-            'y_range':list(reversed(list(df['Week'].unique())))
+            'y_range':list(reversed(list(df[y].unique())))
         }
         xy = {'x':x, 'y':y}
 
     elif mode == 'github':
         range_args ={
-            'x_range':list(df['Week'].unique()),
+            'x_range':list(df[y].unique()),
             'y_range':weekdays
         }
         xy = {'x':y, 'y':x}
@@ -382,7 +383,8 @@ def plotcal(
 
     if show_dates:
         text_renderer = p.text(
-            **xy, text='dom',
+            **xy, 
+            text=day_of_month_column,
             text_align='center',
             text_baseline='middle',
             text_color=text_color,
