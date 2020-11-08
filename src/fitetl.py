@@ -75,6 +75,8 @@ def read_rcvry_csv(datadir):
     df = df.reset_index()
     df['timestamp'] = pd.to_datetime(df['timestamp'].dt.strftime('%Y-%m-%d 07:00:00'))
     df = df.set_index('timestamp')
+    df['date'] = pd.to_datetime(df.index.strftime('%Y-%m-%d'))
+    
     return df
 
 def read_hr_profile_csv(datadir):
@@ -97,6 +99,7 @@ def read_hr_profile_csv(datadir):
             'heart_rate': pd.to_datetime(os.path.basename(file)[:-11]).strftime('%Y-%m-%d'),
 
         })
+
         return df
 
 

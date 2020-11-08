@@ -306,10 +306,7 @@ div_sleep = """
 div_wodup = """
 <div style="font-size:12px; font-family:helvetica; width: 100%; overflow: hidden;">
      <div style="margin-left: 50px; width: 350px; float: left;"> 
-     {A} &nbsp; 
-     {B} &nbsp;
-     {C} &nbsp; 
-     {D} 
+     {wod}
      </div>
 </div>
 """

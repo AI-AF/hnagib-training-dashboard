@@ -3,7 +3,7 @@ from bokeh.models import Band, ColumnDataSource, HoverTool, Legend
 from bokeh.models.callbacks import CustomJS
 from bokeh.transform import transform
 from bokeh.plotting import figure
-from bokeh.models import DataRange1d, Range1d, Step, LinearColorMapper
+from bokeh.models import DataRange1d, Range1d, Step, LinearColorMapper, SingleIntervalTicker
 from bokeh.palettes import OrRd
 import pandas as pd
 import numpy as np
@@ -11,7 +11,7 @@ import itertools
 from datetime import datetime
 
     
-def plotts(df_plot, 
+def plot_ts(df_plot, 
             ys=None,
             units=None,
             hover_vars=None,
@@ -319,17 +319,21 @@ def gen_cal_plot_df(date, cals, wods, sleep, start, end):
     return df
 
 
-def plotcal(
+def plot_cal(
     df, 
-    x='Day',
-    y='Week',
-    day_of_month_column='dom',
+    date_column,
+    color_column,
+    mode='calendar',
+    nan_color='white',
+    color_low_value=None,
+    color_high_value=None,
+    hover_tooltips=None,
     text_color='grey',
     text_font='courier',
-    palette=OrRd[9],
-    weekdays=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-    color_column='Cals',
-    mode='calendar',
+    palette=OrRd[9][::-1],
+    weekdays=None,
+    xaxis_major_label_orientation='horizontal',
+    yaxis_major_label_orientation='horizontal',
     fig_args={
         'plot_width':300,
         'plot_height':200,
@@ -344,31 +348,63 @@ def plotcal(
         'line_width':0,
     },
 
-    hover_tooltips=[
-        ("Date", "@Date"),
-        ("Calories", f"@Cals"),
-        ("", "@A{safe}"),
-        ("", "@B{safe}"),
-        ("", "@C{safe}"),
-        ("", "@D{safe}")
-    ],
     show_dates=True
 
     ):
     
+    x='day'
+    y='week'
+    day_of_month_column='dom'
+    
+    df['date_str'] = df[date_column].dt.strftime('%a %b %d, %Y')
+    df['month'] = df[date_column].dt.strftime('%b')
+    df['year'] = df[date_column].dt.strftime('%y')
+    df[x] = df[date_column].dt.strftime('%a')
+    df[day_of_month_column] = df[date_column].dt.day
+    df[y] = df[date_column].dt.isocalendar().week
+    
+    # Get absolute week numbering for the input data date range
+    d1 = dict(df.groupby('year').max()[y].cumsum())
+    d2 = {str(int(k)+1):v for k,v in d1.items()}
+    d2[min(d1.keys())] = 0    
+    df[y] = df.apply(lambda row: row[y] + d2[row['year']], axis=1)
+    
+    # Monotonize week numbers 
+    # e.g. pd.to_datetime('2019-12-30').isocalendar() --> (2020,1,1)
+    # For visualization, instead of counting this as 1st week of 2020, 
+    # this should be last week of 2019
+    df[y] = df.sort_values('date').groupby(['month', 'year'])[[y]].apply(lambda x: np.maximum.accumulate(x))
+    
+    if not color_low_value:
+        color_low_value = df[color_column].min()
+        
+    if not color_high_value:
+        color_high_value = df[color_column].min()
+    
     source = ColumnDataSource(df)
-    mapper = LinearColorMapper(palette=palette, low=df[color_column].max(), high=df[color_column].min())
+    mapper = LinearColorMapper(
+        palette=palette, 
+        low=df[color_column].min(), 
+        high=df[color_column].max(),
+        nan_color=nan_color
+    )
 
     if mode == 'calendar':
+        if not weekdays:
+            weekdays=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            
         range_args ={
             'x_range':weekdays,
-            'y_range':list(reversed(list(df[y].unique())))
+            'y_range':Range1d(float(df[y].max())+0.5, float(df[y].min())-0.5)#list(reversed([i(i) for i in df[y].unique()]))
         }
         xy = {'x':x, 'y':y}
 
     elif mode == 'github':
+        if not weekdays:
+            weekdays=list(reversed(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']))
+
         range_args ={
-            'x_range':list(df[y].unique()),
+            'x_range':Range1d(float(df[y].min())-0.5, float(df[y].max())+0.5), #Range1d(-1,53),  #[i(i) for i in df[y].unique()],
             'y_range':weekdays
         }
         xy = {'x':y, 'y':x}
@@ -393,11 +429,26 @@ def plotcal(
         )
 
     if range_args['x_range'] != weekdays:
-        p.xaxis.major_label_text_font_size = '0px'
+        p.xaxis.ticker = SingleIntervalTicker(interval=1)
 
     if range_args['y_range'] != weekdays:
-        p.yaxis.major_label_text_font_size = '0pt'
+        p.yaxis.ticker = SingleIntervalTicker(interval=1)
 
+    labels = {}
+    for k,v in dict(df.groupby(['month', 'year'])[y].min()).items():
+        if k[0] == 'Jan':
+            # Add year annotation for each January in data
+            labels[int(v)]=f"'{k[1]} {k[0]}"
+        else:
+            labels[int(v)]=k[0]
+    
+    for i in df[y].unique():
+        if i not in labels.keys():
+            labels[int(i)] = ''
+            
+    p.axis.major_label_overrides = labels
+    p.xaxis.major_label_orientation = xaxis_major_label_orientation 
+    p.yaxis.major_label_orientation = yaxis_major_label_orientation 
     p.axis.major_label_text_color=text_color
     p.axis.axis_line_color = None
     p.axis.major_tick_line_color = None
@@ -405,10 +456,9 @@ def plotcal(
     p.grid.grid_line_color = None
     p.axis.axis_line_color = None
     p.axis.major_tick_line_color = None
+    p.axis.minor_tick_line_color = None
     p.axis.major_label_standoff = 0
-    
-    p.hover.tooltips = hover_tooltips
+    p.hover.tooltips = [('Date','@date_str')] + hover_tooltips
     rect_renderer.nonselection_glyph.fill_alpha=1
 
     return p, source
-

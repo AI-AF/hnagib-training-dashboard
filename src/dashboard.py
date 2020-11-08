@@ -4,7 +4,7 @@ import time
 import dask
 import pandas as pd
 import numpy as np
-from plotutils import plotts, gen_cal_plot_df, plotcal, plot_hr_profile, plot_sleep_stages
+from plotutils import plot_ts, gen_cal_plot_df, plot_cal, plot_hr_profile, plot_sleep_stages
 from bokeh.io import save, output_file
 from bokeh.plotting import figure
 from bokeh.layouts import Column, Row
@@ -34,17 +34,19 @@ df_hr_profile = fitetl.read_hr_profile_csv(fitetl.datadir_hrts)
 ts_files = sorted(glob.glob(f'{fitetl.datadir_hrts}*.csv'))
 
 # WOD logs
-wodupcrawler.main()
-with open(f'{wodupcrawler.datadir}session_wods.json') as json_file:
-    wods = json.load(json_file)
-
+#wodupcrawler.main()
+wods, df_wods = wodupcrawler.read_wods_json(f'{wodupcrawler.datadir}session_wods.json')
 latest_wodup_log_dt = wodupcrawler.get_latest_wodup_log_date(wods)
 
 # Sleep data
+sleepetl.main()
 df_sleep = sleepetl.read_sleep_plot_df()
 
 # PR data
-df_pr = pd.read_csv('../../WodUp-Scraper/data/hasannagib-pr-table.csv').query('reps > 0')
+df_pr = pd.read_csv(
+    '../../WodUp-Scraper/data/hasannagib-pr-table.csv', 
+    parse_dates=[f'date_{mvmt}' for mvmt in ['back_squat', 'front_squat', 'deadlift', 'shoulder_press']]
+).query('reps > 0')
 
 #########################################################################################################
 # Plot parameters
@@ -52,7 +54,7 @@ df_pr = pd.read_csv('../../WodUp-Scraper/data/hasannagib-pr-table.csv').query('r
 
 plot_window = pd.Timedelta('70 days')
 
-plot_hr_rcvry, plot_hr_rcvry_cds = plotts(
+plot_hr_rcvry, plot_hr_rcvry_cds = plot_ts(
     df_hr_rcvry[['120_sec_rec', 'L2', 'L1', 'L0', 'L3']],
     units=['bpm'],
     x_range=DataRange1d(end=datetime.today()+pd.Timedelta('1 days'), follow='end', follow_interval=plot_window),
@@ -72,7 +74,7 @@ plot_hr_rcvry, plot_hr_rcvry_cds = plotts(
 );
 
 
-plot_hr_zones, plot_hr_zones_cds = plotts(
+plot_hr_zones, plot_hr_zones_cds = plot_ts(
     (df_hr_rcvry.rolling(7).sum().dropna() / 60),
     ys=['174_220', '152_173', '138_151'],
     styles=['o-'],
@@ -93,7 +95,7 @@ plot_hr_profile, plot_hr_profile_cds = plot_hr_profile(df_hr_profile, x='s', y='
 plot_sleep_stages, plot_sleep_stages_cds = plot_sleep_stages(df_sleep, plot_window)
 
 
-plot_sleep_schedule, plot_sleep_schedule_cds = plotts(
+plot_sleep_schedule, plot_sleep_schedule_cds = plot_ts(
     df_sleep,
     plot_height=400,
     plot_width=800,
@@ -118,7 +120,7 @@ plot_sleep_schedule, plot_sleep_schedule_cds = plotts(
 movements = ['deadlift', 'barbell_bench_press', 'back_squat', 'shoulder_press']
 three_lift_total = int(df_pr.query("reps==1")[['barbell_bench_press', 'back_squat', 'deadlift']].sum().sum())
 
-plot_rep_prs, plot_rep_prs_cds = plotts(
+plot_rep_prs, plot_rep_prs_cds = plot_ts(
     df_pr,
     ys=movements,
     hover_vars=[f'date_{mvmt}' for mvmt in movements],
@@ -158,7 +160,7 @@ for i in [1, 2, 3, 4, 5]:
     add.name = datetime.today()
     plot_pr_hist = plot_pr_hist.append(add)
 
-    p, _ = plotts(
+    p, _ = plot_ts(
         plot_pr_hist,
         xvar='date',
         styles=['oL'],
@@ -184,53 +186,130 @@ plot_pr_history_tabs = Tabs(tabs=tabs, tabs_location='above', margin=(0,0,0,0))
 
 #########################################################################################################
 
-date = []
-cals = []
-wods_text = []
-sleep = []
+# date = []
+# cals = []
+# wods_text = []
+# sleep = []
 
-df_sleep['dt'] = df_sleep['start'].dt.strftime('%Y-%m-%d')
+# df_sleep['dt'] = df_sleep['start'].dt.strftime('%Y-%m-%d')
 
-for f in glob.glob(f'{fitetl.datadir_hrts}*.csv'):
-    dt = pd.to_datetime(os.path.basename(f)[:10])
-    date.append(dt)
-    cals.append(max(pd.read_csv(f)['calories']))
-    try:
-        wods_text.append(wods[dt.strftime('%Y-%m-%d')])
-    except KeyError:
-        wods_text.append([''] * 4)
+# for f in glob.glob(f'{fitetl.datadir_hrts}*.csv'):
+#     dt = pd.to_datetime(os.path.basename(f)[:10])
+#     date.append(dt)
+#     cals.append(max(pd.read_csv(f)['calories']))
+#     try:
+#         wods_text.append(wods[dt.strftime('%Y-%m-%d')])
+#     except KeyError:
+#         wods_text.append([''] * 4)
 
-    try:
-        dur = df_sleep.set_index('dt').loc[dt.strftime('%Y-%m-%d')]['duration'] - \
-              df_sleep.set_index('dt').loc['2020-10-30']['awake']
-        sleep.append(dur)
-    except KeyError:
-        sleep.append(0)
+#     try:
+#         dur = df_sleep.set_index('dt').loc[dt.strftime('%Y-%m-%d')]['duration'] - \
+#               df_sleep.set_index('dt').loc['2020-10-30']['awake']
+#         sleep.append(dur)
+#     except KeyError:
+#         sleep.append(0)
 
 ##################################################################################################
 
-pcal_30_df = gen_cal_plot_df(date, cals, wods_text, sleep, datetime.today() - pd.Timedelta('31 d'), datetime.today())
-pcal_30, pcal_30_cds = plotcal(pcal_30_df)
+# pcal_30_df = gen_cal_plot_df(date, cals, wods_text, sleep, datetime.today() - pd.Timedelta('31 d'), datetime.today())
+# pcal_30, pcal_30_cds = plotcal(pcal_30_df)
 
 
-pcal_df = gen_cal_plot_df(date, cals, wods_text, sleep, datetime.today() - pd.Timedelta('165 d'), datetime.today())
-pcal, pcal_cds = plotcal(
-    pcal_df,
-    weekdays=['Sat', 'Fri', 'Thu', 'Wed', 'Tue', 'Mon', 'Sun'],
-    mode='github',
+# pcal_df = gen_cal_plot_df(date, cals, wods_text, sleep, datetime.today() - pd.Timedelta('165 d'), datetime.today())
+# pcal, pcal_cds = plotcal(
+#     pcal_df,
+#     weekdays=['Sat', 'Fri', 'Thu', 'Wed', 'Tue', 'Mon', 'Sun'],
+#     mode='github',
+#     fig_args={
+#         'plot_width':665,
+#         'plot_height':175,
+#         'tools':'hover',
+#         'toolbar_location':None,
+#     },
+#     hover_tooltips=[
+#         ("Date", "@Date"),
+#         ("Calories", f"@Cals"),
+#         ("Hours slept", "@sleep_hr:@sleep_min")
+#     ],
+#     show_dates=False
+# )
+
+df_cal = pd.DataFrame({'date': pd.date_range('2020-05-01', datetime.today())})
+df_cal = df_cal.merge(df_hr_rcvry, on='date', how='left').merge(df_wods, on='date', how='left')
+df_cal = df_cal[['date','calories', 'max_hr', '120_sec_rec', 'html']]
+
+pcal, pcal_cds = plot_cal(
+    df_cal, 
+    date_column='date', 
+    color_column='calories',
+    
+    mode='github', 
     fig_args={
-        'plot_width':665,
+        'plot_width':700,
         'plot_height':175,
         'tools':'hover',
         'toolbar_location':None,
-    },
+        'x_axis_location':"below"
+    }, 
     hover_tooltips=[
-        ("Date", "@Date"),
-        ("Calories", f"@Cals"),
-        ("Hours slept", "@sleep_hr:@sleep_min")
-    ],
+        ('Calories','@calories'),
+        ('Max HR','@max_hr BPM'),
+        ('2-min recovery','@120_sec_rec BPM'),
+    ], 
     show_dates=False
 )
+
+pcal_30, pcal_30_cds = plot_cal(
+    df_cal.iloc[-30:].copy(), 
+    date_column='date', 
+    color_column='calories',
+    
+    mode='calendar',
+    yaxis_major_label_orientation='vertical',
+    fig_args={
+        'plot_width':400,
+        'plot_height':200,
+        'tools':'hover',
+        'toolbar_location':None,
+        'x_axis_location':"above",
+        'y_axis_location':"left",
+    }, 
+    hover_tooltips=[
+        ('Calories','@calories'),
+        ('Max HR','@max_hr BPM'),
+        ('2-min recovery','@120_sec_rec BPM'),
+        ('WOD','@html{safe}'),
+    ], 
+    show_dates=True
+)
+
+# df_header_cals = df_header_cals[['date','calories', 'max_hr', '120_sec_rec']]
+
+# header_cals = [plot_cal(
+#     df_header_cals, 
+#     date_column='date', 
+#     color_column=col,
+    
+#     mode='github', 
+#     fig_args={
+#         'plot_width':700,
+#         'plot_height':175,
+#         'tools':'hover',
+#         'toolbar_location':None,
+#         'x_axis_location':"above"
+#     }, 
+#     hover_tooltips=[
+#         ('Calories','@calories'),
+#         ('Max HR','@max_hr BPM'),
+#         ('2-min recovery','@120_sec_rec BPM'),
+#     ], 
+#     show_dates=False
+# ) for col in ['calories', 'max_hr', '120_sec_rec']]
+
+# pcal_tabs = Tabs(
+#     tabs=[Panel(child=tabs[0], title=title) for tabs, title in zip(header_cals, ['Calories', 'Max Heart Rate', '2 min Recovery Heart Rate'])], 
+#     tabs_location='below'
+# )
 
 """
 #######################################################################################################
@@ -248,10 +327,7 @@ Bokeh interactive data load
 #########################################################################################################
 """
 div_wodup = Div(text=htmltext.div_wodup.format(
-                A=wods[latest_wodup_log_dt][0],
-                B=wods[latest_wodup_log_dt][1],
-                C=wods[latest_wodup_log_dt][2],
-                D=wods[latest_wodup_log_dt][3]
+                wod=wods[latest_wodup_log_dt],
             ))
 
 dp_callback = CustomJS(
@@ -265,7 +341,7 @@ dp_callback = CustomJS(
     code=
     """
     source.data['BPM'] = source.data[cb_obj.value];
-    div.text = html.replace("{A}", wods[cb_obj.value][0]).replace("{B}", wods[cb_obj.value][1]).replace("{C}", wods[cb_obj.value][2]).replace("{D}", wods[cb_obj.value][3])
+    div.text = html.replace("{wod}", wods[cb_obj.value])
     source.change.emit();
 
     """
@@ -292,7 +368,7 @@ url = "https://www.wodup.com/timeline?date=@dt_str"
 
 cal_tap_code = """
     var dt_idx = p.selected.indices[0]
-    var dt = p.data['Date'][dt_idx]
+    var dt = p.data['date_str_Ymd'][dt_idx]
 
     dp.value = dt
     dp.change.emit()
@@ -305,6 +381,7 @@ pcal_30.add_tools(TapTool(callback=tap_cal_callback))
 
 tap_cal_callback = CustomJS(args={'p': pcal_cds, 'r': plot_hr_zones, 'dp': datePicker}, code=cal_tap_code)
 pcal.add_tools(TapTool(callback=tap_cal_callback))
+
 
 #########################################################################################################
 # Dashboard
@@ -331,7 +408,7 @@ dash = Column(
             child=Row(
                 Column(
                     Div(text=htmltext.div_workout_cal), 
-                    Row(space('100'), pcal_30), 
+                    Row(space('60'), pcal_30), 
                     Div(text=htmltext.div_hr_profile), 
                     Row(space('30'), plot_hr_profile), 
                 ),

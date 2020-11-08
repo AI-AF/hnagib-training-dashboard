@@ -39,11 +39,13 @@ class WahooTickrX:
             
     def get_heartrate_zones(self):
         zones ={
-            '174_': (self.heartrate.query('heart_rate >= 174')).shape[0],
+            '174_220': (self.heartrate.query('heart_rate >= 174')).shape[0],
             '152_173': (self.heartrate.query('(heart_rate >= 152) & (heart_rate <= 173)')).shape[0],
             '138_151': (self.heartrate.query('(heart_rate >= 138) & (heart_rate <= 151)')).shape[0],
             '119_137': (self.heartrate.query('(heart_rate >= 119) & (heart_rate <= 137)')).shape[0],
-            '_118': (self.heartrate.query('heart_rate <= 118')).shape[0]
+            '0_118': (self.heartrate.query('heart_rate <= 118')).shape[0],
+            'calories': float(self.heartrate['calories'].max()),
+            'max_hr': float(self.heartrate['heart_rate'].max())
         }
         return zones
         
