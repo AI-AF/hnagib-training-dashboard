@@ -347,16 +347,37 @@ def plot_cal(
         'line_color':'white',
         'line_width':0,
     },
-
     show_dates=True
+):
+    """
+    Function making calendar heatmap plots using Bokeh.
 
-    ):
+    :param df: pandas DataFrame with date_column in datetime format
+    :param date_column: name of the date column
+    :param color_column: name of the column to use for heatmap colors
+    :param mode: "github" for github contribution like calendar, "calendar" for standard calendar layout
+    :param nan_color: color for NaN values of color_column
+    :param palette: heatmap color palette
+    :param color_low_value: low value to map to color palette
+    :param color_high_value: high value to map to color palette
+    :param hover_tooltips: bokeh hover tooltips
+    :param text_color: text color for axis labels
+    :param text_font: text font size for axis labels
+    :param weekdays: weekday label ordering e.g. ['Mon', 'Tue'..., 'Sun']
+    :param xaxis_major_label_orientation: "vertical" or "horizontal"
+    :param yaxis_major_label_orientation: "vertical" or "horizontal"
+    :param fig_args: Bokeh figure() args
+    :param rect_args: Bokeh Rect() args
+    :param show_dates: bool; show calendar dates on plot
+    :return: plot obj, plot column data source obj
+    """
     
-    x='day'
-    y='week'
-    day_of_month_column='dom'
+    x = 'day'
+    y = 'week'
+    day_of_month_column = 'dom'
     
-    df['date_str'] = df[date_column].dt.strftime('%a %b %d, %Y')
+    df['date_str_abdY'] = df[date_column].dt.strftime('%a %b %d, %Y')
+    df['date_str_Ymd'] = df[date_column].dt.strftime('%Y-%m-%d')
     df['month'] = df[date_column].dt.strftime('%b')
     df['year'] = df[date_column].dt.strftime('%y')
     df[x] = df[date_column].dt.strftime('%a')
@@ -458,7 +479,7 @@ def plot_cal(
     p.axis.major_tick_line_color = None
     p.axis.minor_tick_line_color = None
     p.axis.major_label_standoff = 0
-    p.hover.tooltips = [('Date','@date_str')] + hover_tooltips
+    p.hover.tooltips = [('Date','@date_str_abdY')] + hover_tooltips
     rect_renderer.nonselection_glyph.fill_alpha=1
 
     return p, source
