@@ -1,1 +1,1 @@
-Modules used by lectures & assignments
+Python modules
