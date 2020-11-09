@@ -63,7 +63,6 @@ class fitbit:
             time.sleep(4)
 
             tree = html.fromstring(self.browser.page_source)
-            print(tree.xpath('//div[@class="sleep-log-edit ember-view"]/div/div/p/text()'))
             date.append(tree.xpath('//div[@class="sleep-log-edit ember-view"]/div/div/p/text()')[0])    
             print(f'Scraping sleep log for: {date[-1]}')
 
@@ -80,7 +79,6 @@ class fitbit:
 
             except IndexError:
                 sleep_stages.append([0.125, 0.20, 0.5, 0.175])
-                print(sleep_stages)
 
             self.browser.back()
             time.sleep(4)

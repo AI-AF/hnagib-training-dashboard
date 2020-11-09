@@ -4,7 +4,7 @@ from bokeh.models.callbacks import CustomJS
 from bokeh.transform import transform
 from bokeh.plotting import figure
 from bokeh.models import DataRange1d, Range1d, Step, LinearColorMapper, SingleIntervalTicker
-from bokeh.palettes import OrRd
+from bokeh.palettes import OrRd, Blues, Reds
 import pandas as pd
 import numpy as np
 import itertools
@@ -328,9 +328,9 @@ def plot_cal(
     color_low_value=None,
     color_high_value=None,
     hover_tooltips=None,
-    text_color='grey',
+    major_label_text_color='grey',
     text_font='courier',
-    palette=OrRd[9][::-1],
+    palette=OrRd[9][::-1], #Blues[9][::-1], #['#7ec4ff', '#3f8dff', '#154ba6'], #'#e73360'], OrRd[9][::-1],
     weekdays=None,
     xaxis_major_label_orientation='horizontal',
     yaxis_major_label_orientation='horizontal',
@@ -347,7 +347,8 @@ def plot_cal(
         'line_color':'white',
         'line_width':0,
     },
-    show_dates=True
+    show_dates=True,
+    date_text_color='#e73360'
 ):
     """
     Function making calendar heatmap plots using Bokeh.
@@ -444,7 +445,7 @@ def plot_cal(
             text=day_of_month_column,
             text_align='center',
             text_baseline='middle',
-            text_color=text_color,
+            text_color=date_text_color,
             text_font=text_font,
             source=source
         )
@@ -471,7 +472,7 @@ def plot_cal(
     p.axis.major_label_overrides = labels
     p.xaxis.major_label_orientation = xaxis_major_label_orientation 
     p.yaxis.major_label_orientation = yaxis_major_label_orientation 
-    p.axis.major_label_text_color=text_color
+    p.axis.major_label_text_color=major_label_text_color
     p.axis.axis_line_color = None
     p.axis.major_tick_line_color = None
     p.outline_line_color = None

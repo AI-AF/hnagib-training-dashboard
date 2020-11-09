@@ -46,7 +46,7 @@ df_sleep = sleepetl.read_sleep_plot_df()
 df_pr = pd.read_csv(
     '../../WodUp-Scraper/data/hasannagib-pr-table.csv', 
     parse_dates=[f'date_{mvmt}' for mvmt in ['back_squat', 'front_squat', 'deadlift', 'shoulder_press']]
-).query('reps > 0')
+).query('(reps > 0) and (reps <= 10)')
 
 #########################################################################################################
 # Time series plots
@@ -82,7 +82,7 @@ plot_hr_zones, plot_hr_zones_cds = plot_ts(
     title='HR zones (7 day rolling sum)',
     x_range=plot_hr_rcvry.x_range,
     ylabel='Minutes',
-    tools='xwheel_pan,pan,reset',
+    tools='xwheel_pan,pan,reset,box_zoom',
     active_scroll='xwheel_pan',
     plot_height=325,
     plot_width=450,
@@ -229,7 +229,6 @@ pcal_30, pcal_30_cds = plot_cal(
     df_cal.iloc[-31:].copy(), 
     date_column='date', 
     color_column='calories',
-    
     mode='calendar',
     yaxis_major_label_orientation='vertical',
     fig_args={
@@ -254,7 +253,8 @@ pcal_30, pcal_30_cds = plot_cal(
         ('HR zone (>174 BPM)', '@174_220 s'),
         #('WOD','@html{safe}'),
     ], 
-    show_dates=True
+    show_dates=True,
+    date_text_color='grey'
 )
 
 

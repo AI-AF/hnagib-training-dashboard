@@ -120,6 +120,11 @@ bokeh_template = """
 	              color: red;
 	            }
 	            
+	            .fa-twitter {
+				  background: white;
+				  color: #55ACEE;
+				}
+
 	            .fa-github {
 	              background: transparent;
 	              color: black;
@@ -211,6 +216,7 @@ div_header = """
 <a href="https://github.com/hnagib" class="fa fa-github" target="_blank" style="font-size:24px"></a>
 <a href="https://www.facebook.com/bigannasah/" target="_blank" class="fa fa-facebook" style="font-size:24px"></a>
 <a href="https://www.instagram.com/hnagib/" target="_blank" class="fa fa-instagram" style="font-size:24px"></a>
+<a href="https://twitter.com/HasanNagib/" target="_blank" class="fa fa-twitter" style="font-size:24px"></a>
 <a href="mailto:hasan.nagib@gmail.com?subject = Hasan's fitness data blog&body = Hello!" class="fa fa-envelope" style="font-size:24px"></a>
 <a href="https://s3.amazonaws.com/hnagib.com/Hasan-Nagib-Resume.pdf" target="_blank" class="tooltip fa fa-file" style="font-size:24px">
 <span class="tooltiptext">Resume</span></a>
@@ -320,28 +326,21 @@ div_wodup = """
 div_program = """
 <h2>Monday</h2>
     <ul>
-        <li>Back Squat: 5X10 @ 225 lbs</li>
-        <li>Bench Press: 5X5 @ 195 lbs</li>
-        <li>AMRAP 15 minutes</li>
-            <ul>
-                <li>5 Deadlifts</li>
-                <li>5 Pendalay rows</li>
-                <li>5 Power cleans</li>
-                <li>5 Push jerks</li>
-                <li>5 Front squats</li>
-            </ul>
+        <li>Back Squat: 3X10 @ 225 lbs</li>
+        <li>Bench Press: 3X5 @ 195 lbs</li>
+        <li>Assault bike: Max cals in 15 minutes</li>
     </ul>
 <h2>Tuesday</h2>
     <ul>
         <li>Ring muscle ups 10x5</li>
         <li>Handstand push ups 5x5</li>
         <li>Box pistols 5x10</li>
-        <li>Run: 5-10km</li>
+        <li>Assault bike: Max cals in 15 minutes</li>
     </ul>
 <h2>Wednesday</h2>
     <ul>
-        <li>Deadlift: 5X5 @ 305 lbs</li>
-        <li>Bench Press: 4X4 @ 195 lbs</li>
+        <li>Shoulder press: 5X8 @ 85 lbs</li>
+        <li>Barbell hip thrust: 5X8 @ 225 lbs</li>
         <li>4 Rounds for time:</li>
             <ul>
                 <li>4 Strict pull ups</li>
@@ -355,12 +354,12 @@ div_program = """
         <li>Ring muscle ups 10x5</li>
         <li>Handstand push ups 5x5</li>
         <li>Box pistols 5x10</li>
-        <li>Run: 5-10km</li>
+        <li>Assault bike: Max cals in 15 minutes</li>
     </ul>
 <h2>Friday</h2>
     <ul>
-        <li>Deadlift: 4X4 @ 315 lbs</li>
-        <li>Banded Bench press: 5X5 @ 165 lbs</li>
+        <li>Deadlift: 5X8 @ 260 lbs</li>
+        <li>Banded bench press: 5X8 @ 135 lbs</li>
         <li>4 Rounds for time:</li>
             <ul>
                 <li>4 Deficit handstand push ups</li>
