@@ -425,7 +425,7 @@ def plot_cal(
             weekdays=list(reversed(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']))
 
         range_args ={
-            'x_range':Range1d(float(df[y].min())-0.5, float(df[y].max())+0.5), #Range1d(-1,53),  #[i(i) for i in df[y].unique()],
+            'x_range':Range1d(float(df[y].max())+0.5, float(df[y].min())-0.5), #Range1d(-1,53),  #[i(i) for i in df[y].unique()],
             'y_range':weekdays
         }
         xy = {'x':y, 'y':x}
@@ -448,6 +448,7 @@ def plot_cal(
             text_font=text_font,
             source=source
         )
+        text_renderer.nonselection_glyph.text_alpha=1
 
     if range_args['x_range'] != weekdays:
         p.xaxis.ticker = SingleIntervalTicker(interval=1)

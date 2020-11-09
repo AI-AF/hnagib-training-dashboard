@@ -24,6 +24,12 @@ bokeh_template = """
 	  <body>
 	    {% block inner_body %}
 	        <style>
+	        	.pointer {
+	        		style=color: transparent; 
+	        		background-color: transparent; 
+	        		border-color: transparent;
+	        	}
+
 	        	.bk {
 	                style=font-family:helvetica;
 	                font-size:12px; 
@@ -201,12 +207,12 @@ div_header = """
 <div class="header" style="style=font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 400px; float: left;">
 <h1>Hasan Nagib</h1> 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-<a href="https://www.linkedin.com/in/hnagib?_l=en_US" class="fa fa-linkedin" style="font-size:24px"></a>
-<a href="https://github.com/hnagib" class="fa fa-github" style="font-size:24px"></a>
-<a href="https://www.facebook.com/bigannasah/" class="fa fa-facebook" style="font-size:24px"></a>
-<a href="https://www.instagram.com/hnagib/" class="fa fa-instagram" style="font-size:24px"></a>
+<a href="https://www.linkedin.com/in/hnagib?_l=en_US" target="_blank" class="fa fa-linkedin" style="font-size:24px"></a>
+<a href="https://github.com/hnagib" class="fa fa-github" target="_blank" style="font-size:24px"></a>
+<a href="https://www.facebook.com/bigannasah/" target="_blank" class="fa fa-facebook" style="font-size:24px"></a>
+<a href="https://www.instagram.com/hnagib/" target="_blank" class="fa fa-instagram" style="font-size:24px"></a>
 <a href="mailto:hasan.nagib@gmail.com?subject = Hasan's fitness data blog&body = Hello!" class="fa fa-envelope" style="font-size:24px"></a>
-<a href="https://s3.amazonaws.com/hnagib.com/Hasan-Nagib-Resume.pdf" class="tooltip fa fa-file" style="font-size:24px">
+<a href="https://s3.amazonaws.com/hnagib.com/Hasan-Nagib-Resume.pdf" target="_blank" class="tooltip fa fa-file" style="font-size:24px">
 <span class="tooltiptext">Resume</span></a>
 """
 
@@ -214,10 +220,10 @@ div_intro = """
 <div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;">
 <p>
     Welcome to my health & fitness data journal! This project was born out of my love for fitness, data & 
-    <a href="https://docs.bokeh.org/en/latest/index.html" class="url">Bokeh</a>. The goal of this project is to aggregate and visualize 
+    <a href="https://docs.bokeh.org/en/latest/index.html" class="url" target="_blank">Bokeh</a>. The goal of this project is to aggregate and visualize 
     all of my health and fitness data from various sources. The data is sourced from my Fitbit, Polar HR10, Wahoo TickerX and 
-    <a href="https://www.wodup.com" class="url">WodUp</a> account. The data is refreshed by a daily batch job. This is a Bokeh dashboard hosted on AWS S3. 
-    Check out the GitHub <a class="url" href="https://github.com/hnagib/hnagib-training-dashboard">repo</a> for details of the project.
+    <a href="https://www.wodup.com" class="url" target="_blank">WodUp</a> account. The data is refreshed by a daily batch job. This is a Bokeh dashboard hosted on AWS S3. 
+    Check out the GitHub <a class="url" target="_blank" href="https://github.com/hnagib/hnagib-training-dashboard">repo</a> for details of the project.
 </p>
 """
 
@@ -226,7 +232,7 @@ div_hr_rcvry = """
 <h2>&#127939;&#127997; Workouts & Heart Rate</h2>
 <p>Heart rate recovery greater than 53 bpm in 2 minutes indicates that one's biological age 
 is younger than calendar age. Greater recovery HR generally correlates with better health. Check out this 
-<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5524096/#jah32178-sec-0016title" class="url">meta analysis</a> 
+<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5524096/#jah32178-sec-0016title" class="url" target="_blank">meta analysis</a> 
 for more on this. The bar chart below shows my 2 minute recovery heart rate following workouts. 
 This is calculated automatically using data collected from my Polar HR10 or Wahoo TickerX chest straps.   
 Click on any bar to see corresponding workout and HR profile.
@@ -250,10 +256,10 @@ peak HR zone around or under 30-45 minutes depending on the goal of a given prog
 div_hr_profile = """
 <div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;">   
 <p>
-Heart rate data is sourced from <a class="url" href="https://www.polar.com/ca-en/products/accessories/h10_heart_rate_sensor">Polar HR10</a> 
-and <a class="url" href="https://www.wahoofitness.com/devices/heart-rate-monitors/tickr-x/buy">Wahoo TickerX's</a> .fit files. 
+Heart rate data is sourced from <a class="url" target="_blank" href="https://www.polar.com/ca-en/products/accessories/h10_heart_rate_sensor">Polar HR10</a> 
+and <a class="url" target="_blank" href="https://www.wahoofitness.com/devices/heart-rate-monitors/tickr-x/buy">Wahoo TickerX's</a> .fit files. 
 The .fit files are synced to Dropbox from the Wahoo iOS app and 
-parsed using the <a href="https://pypi.org/project/fitparse/" class="url">fitparse</a> python library.
+parsed using the <a href="https://pypi.org/project/fitparse/" class="url" target="_blank">fitparse</a> python library.
 </p>
 </div>
 """
@@ -262,9 +268,9 @@ parsed using the <a href="https://pypi.org/project/fitparse/" class="url">fitpar
 div_wod_logs="""
 <div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;">   
 <h2>&#128217; WOD Logs</h2>
-<p>I use <a href="https://www.wodup.com" class="url">WodUp</a> to log my workouts. Unfortunately WodUp currently does 
-not have an API to retrieve this data. Workout data is sourced from my <a href="https://www.wodup.com" class="url">WodUp</a> account. 
-The data is scraped using <a class="url" href="https://pypi.org/project/selenium/">selenium</a>. Pick a date to see the WOD and the corresponding HR profile. 
+<p>I use <a href="https://www.wodup.com" class="url" target="_blank">WodUp</a> to log my workouts. Unfortunately WodUp currently does 
+not have an API to retrieve this data. Workout logs are scraped from my <a href="https://www.wodup.com" class="url" target="_blank">WodUp</a> account. 
+The data is scraped using <a class="url" target="_blank" href="https://pypi.org/project/selenium/">selenium</a>. Pick a date to see the WOD and the corresponding HR profile. 
 </p>
 </div>
 """
@@ -274,7 +280,7 @@ div_weight_lifting = """
 <h2>&#127947;&#127997; Weight Lifting</h2>
 <p>The views below show lift PRs for different movements and reps. 
 I currently weigh ~170 lbs and my three lift total is {} lbs. 
-In terms of <a href="https://strengthlevel.com/powerlifting-standards" class="url">powerlifting standards</a>,
+In terms of <a href="https://strengthlevel.com/powerlifting-standards" class="url" target="_blank">powerlifting standards</a>,
 I would be an intermediate lifter. My goal is to get to the advanced level (i.e. 1000 lbs) by end of 2021. 
 I am hoping to get there with a 405 lbs deadlift, 355 lbs back squat & 240 lbs bench press &#129310;&#127997;
 </p>
@@ -309,4 +315,58 @@ div_wodup = """
      {wod}
      </div>
 </div>
+"""
+
+div_program = """
+<h2>Monday</h2>
+    <ul>
+        <li>Back Squat: 5X10 @ 225 lbs</li>
+        <li>Bench Press: 5X5 @ 195 lbs</li>
+        <li>AMRAP 15 minutes</li>
+            <ul>
+                <li>5 Deadlifts</li>
+                <li>5 Pendalay rows</li>
+                <li>5 Power cleans</li>
+                <li>5 Push jerks</li>
+                <li>5 Front squats</li>
+            </ul>
+    </ul>
+<h2>Tuesday</h2>
+    <ul>
+        <li>Ring muscle ups 10x5</li>
+        <li>Handstand push ups 5x5</li>
+        <li>Box pistols 5x10</li>
+        <li>Run: 5-10km</li>
+    </ul>
+<h2>Wednesday</h2>
+    <ul>
+        <li>Deadlift: 5X5 @ 305 lbs</li>
+        <li>Bench Press: 4X4 @ 195 lbs</li>
+        <li>4 Rounds for time:</li>
+            <ul>
+                <li>4 Strict pull ups</li>
+                <li>8 Burpees</li>
+                <li>16 Box jumps</li>
+                <li>32 Double Unders</li>
+            </ul>
+    </ul>
+<h2>Thursday</h2>
+    <ul>
+        <li>Ring muscle ups 10x5</li>
+        <li>Handstand push ups 5x5</li>
+        <li>Box pistols 5x10</li>
+        <li>Run: 5-10km</li>
+    </ul>
+<h2>Friday</h2>
+    <ul>
+        <li>Deadlift: 4X4 @ 315 lbs</li>
+        <li>Banded Bench press: 5X5 @ 165 lbs</li>
+        <li>4 Rounds for time:</li>
+            <ul>
+                <li>4 Deficit handstand push ups</li>
+                <li>8 Ring dips</li>
+                <li>16 Box jumps overs</li>
+                <li>32 Calories of assault bike</li>
+            </ul>
+    </ul>
 """

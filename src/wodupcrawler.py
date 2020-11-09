@@ -6,6 +6,8 @@ from selenium.webdriver.chrome.options import Options
 import json
 from datetime import datetime
 import os
+import re
+
 
 datadir = '/Users/hasannagib/Documents/s3stage/wodup/'
 
@@ -28,8 +30,8 @@ class WodUp:
         chrome_options.add_argument("--headless")
         self.browser = webdriver.Chrome(
             chrome_driver_path, 
-            #options=chrome_options
-            ) #, options=chrome_options
+            options=chrome_options
+            ) 
         self.browser.get(self.url)
         self.login()
         self.raw_logs = {}
@@ -82,7 +84,8 @@ class WodUp:
                     for url in v:
                         self.browser.get('https://wodup.com' + url)
                         time.sleep(1.5)
-                        e = self.browser.find_element_by_xpath("//div[@id='WODUP_ACTIVITY_DETAIL_SELECTED_ITEM_ID']/a/div")
+                        #e = self.browser.find_element_by_xpath("//div[@id='WODUP_ACTIVITY_DETAIL_SELECTED_ITEM_ID']/a/div")
+                        e = self.browser.find_element_by_xpath('//div[@class="ph2 pv3 pa3-l"]')
                         wods.append(e.get_attribute('innerHTML'))
                 else:
                     wods = ['', '', '', '']
@@ -109,7 +112,21 @@ def read_wods_json(file):
         wods = json.load(json_file)
 
     for k,v in wods.items():
-        wods[k] = '<p>&nbsp;</p>'.join(v)
+        html = '<p>&nbsp;</p>'.join(v)
+
+        img_urls = re.findall('src="([^"]+)"', html)
+
+        new = [f'<a href="{url.replace("avatar_thumbnail", "feed_photo")}" target="_blank"><img style="width: 100px; height: 100px;"  src="{url}" alt="Media for Result"></a>' 
+        for url in img_urls]
+         
+        old = [f'<img src="{url}" alt="Media for Result">' 
+        for url in img_urls]
+
+
+        for i,j in zip(new, old):
+            html = html.replace(j, i)
+
+        wods[k] = html 
         
     df_wod = pd.DataFrame(wods, index=['html']).T
     df_wod.index.name = 'date'
@@ -129,36 +146,38 @@ def main():
     dts = [dt.strftime('%Y-%m-%d') for dt in pd.date_range('2019-09-16', datetime.today())]
     
     # Overwrite scrape data for these days to pick up logs entered after script run
-    overwrite_dates = dts[-3:]
+    overwrite_dates = []#dts[-1:]
+    overwrite_dates = list((set(dts) - set(urls.keys())).union(set(overwrite_dates)))
+
     print('Scraping WoUp logs for: ', overwrite_dates)
 
+    if len(overwrite_dates)>0:
+        wu = WodUp(
+            email='hasan.nagib@gmail.com',
+            password=os.environ['wodify_password'],
+            username='hasannagib'
+        )
 
-    wu = WodUp(
-        email='hasan.nagib@gmail.com',
-        password=os.environ['wodify_password'],
-        username='hasannagib'
-    )
+        wu.session_urls = urls
+        wu.session_wods = wods
 
-    wu.session_urls = urls
-    wu.session_wods = wods
+        # Add missing urls
+        urls = wu.get_session_urls(dts, overwrite_dates)
+        with open(f'{datadir}session_urls.json', 'w') as outfile:
+            json.dump(urls, outfile)
+        
+        # Get wods from urls
+        wods = wu.get_session_wods(overwrite_dates)
+        for k, v in wods.items():
+            if len(v) < 4:
+                for i in range(4-len(v)):
+                    wods[k].append('')
 
-    # Add missing urls
-    urls = wu.get_session_urls(dts, overwrite_dates)
-    with open(f'{datadir}session_urls.json', 'w') as outfile:
-        json.dump(urls, outfile)
-    
-    # Get wods from urls
-    wods = wu.get_session_wods(overwrite_dates)
-    for k, v in wods.items():
-        if len(v) < 4:
-            for i in range(4-len(v)):
-                wods[k].append('')
-
-    with open(f'{datadir}session_wods.json', 'w') as outfile:
-        json.dump(wods, outfile)
+        with open(f'{datadir}session_wods.json', 'w') as outfile:
+            json.dump(wods, outfile)
 
 
-    wu.browser.quit()
+        wu.browser.quit()
 
 if __name__ == '__main__':
     main()

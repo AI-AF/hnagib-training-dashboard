@@ -34,7 +34,7 @@ df_hr_profile = fitetl.read_hr_profile_csv(fitetl.datadir_hrts)
 ts_files = sorted(glob.glob(f'{fitetl.datadir_hrts}*.csv'))
 
 # WOD logs
-#wodupcrawler.main()
+wodupcrawler.main()
 wods, df_wods = wodupcrawler.read_wods_json(f'{wodupcrawler.datadir}session_wods.json')
 latest_wodup_log_dt = wodupcrawler.get_latest_wodup_log_date(wods)
 
@@ -49,7 +49,7 @@ df_pr = pd.read_csv(
 ).query('reps > 0')
 
 #########################################################################################################
-# Plot parameters
+# Time series plots
 #########################################################################################################
 
 plot_window = pd.Timedelta('70 days')
@@ -185,58 +185,16 @@ for i in [1, 2, 3, 4, 5]:
 plot_pr_history_tabs = Tabs(tabs=tabs, tabs_location='above', margin=(0,0,0,0))
 
 #########################################################################################################
+# Calendar plots
+#########################################################################################################
 
-# date = []
-# cals = []
-# wods_text = []
-# sleep = []
-
-# df_sleep['dt'] = df_sleep['start'].dt.strftime('%Y-%m-%d')
-
-# for f in glob.glob(f'{fitetl.datadir_hrts}*.csv'):
-#     dt = pd.to_datetime(os.path.basename(f)[:10])
-#     date.append(dt)
-#     cals.append(max(pd.read_csv(f)['calories']))
-#     try:
-#         wods_text.append(wods[dt.strftime('%Y-%m-%d')])
-#     except KeyError:
-#         wods_text.append([''] * 4)
-
-#     try:
-#         dur = df_sleep.set_index('dt').loc[dt.strftime('%Y-%m-%d')]['duration'] - \
-#               df_sleep.set_index('dt').loc['2020-10-30']['awake']
-#         sleep.append(dur)
-#     except KeyError:
-#         sleep.append(0)
-
-##################################################################################################
-
-# pcal_30_df = gen_cal_plot_df(date, cals, wods_text, sleep, datetime.today() - pd.Timedelta('31 d'), datetime.today())
-# pcal_30, pcal_30_cds = plotcal(pcal_30_df)
-
-
-# pcal_df = gen_cal_plot_df(date, cals, wods_text, sleep, datetime.today() - pd.Timedelta('165 d'), datetime.today())
-# pcal, pcal_cds = plotcal(
-#     pcal_df,
-#     weekdays=['Sat', 'Fri', 'Thu', 'Wed', 'Tue', 'Mon', 'Sun'],
-#     mode='github',
-#     fig_args={
-#         'plot_width':665,
-#         'plot_height':175,
-#         'tools':'hover',
-#         'toolbar_location':None,
-#     },
-#     hover_tooltips=[
-#         ("Date", "@Date"),
-#         ("Calories", f"@Cals"),
-#         ("Hours slept", "@sleep_hr:@sleep_min")
-#     ],
-#     show_dates=False
-# )
-
-df_cal = pd.DataFrame({'date': pd.date_range('2020-05-01', datetime.today())})
+df_cal = pd.DataFrame({'date': pd.date_range('2019-09-16', datetime.today())})
 df_cal = df_cal.merge(df_hr_rcvry, on='date', how='left').merge(df_wods, on='date', how='left')
-df_cal = df_cal[['date','calories', 'max_hr', '120_sec_rec', 'html']]
+df_cal = df_cal[['date','calories', 'max_hr', '120_sec_rec', 'html', '174_220']]
+
+# If WodUp data is available but Wahoo data is not, impute calories to 300
+missing_wahoo = df_cal.calories.isna() & (df_cal.html != "<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>")
+df_cal.loc[missing_wahoo,'calories'] = 500
 
 pcal, pcal_cds = plot_cal(
     df_cal, 
@@ -245,22 +203,30 @@ pcal, pcal_cds = plot_cal(
     
     mode='github', 
     fig_args={
-        'plot_width':700,
-        'plot_height':175,
+        'plot_width':1000,
+        'plot_height':150,
         'tools':'hover',
         'toolbar_location':None,
         'x_axis_location':"below"
     }, 
+    rect_args={
+        'width':1,
+        'height':1,
+        'line_color':'grey',
+        'line_width':1,
+        'line_alpha':0.15,
+    },
     hover_tooltips=[
         ('Calories','@calories'),
         ('Max HR','@max_hr BPM'),
         ('2-min recovery','@120_sec_rec BPM'),
+        ('HR zone (>174 BPM)', '@174_220 s')
     ], 
     show_dates=False
 )
 
 pcal_30, pcal_30_cds = plot_cal(
-    df_cal.iloc[-30:].copy(), 
+    df_cal.iloc[-31:].copy(), 
     date_column='date', 
     color_column='calories',
     
@@ -273,43 +239,24 @@ pcal_30, pcal_30_cds = plot_cal(
         'toolbar_location':None,
         'x_axis_location':"above",
         'y_axis_location':"left",
+    },
+    rect_args={
+        'width':1,
+        'height':1,
+        'line_color':'grey',
+        'line_width':1,
+        'line_alpha':0.15,
     }, 
     hover_tooltips=[
         ('Calories','@calories'),
         ('Max HR','@max_hr BPM'),
         ('2-min recovery','@120_sec_rec BPM'),
-        ('WOD','@html{safe}'),
+        ('HR zone (>174 BPM)', '@174_220 s'),
+        #('WOD','@html{safe}'),
     ], 
     show_dates=True
 )
 
-# df_header_cals = df_header_cals[['date','calories', 'max_hr', '120_sec_rec']]
-
-# header_cals = [plot_cal(
-#     df_header_cals, 
-#     date_column='date', 
-#     color_column=col,
-    
-#     mode='github', 
-#     fig_args={
-#         'plot_width':700,
-#         'plot_height':175,
-#         'tools':'hover',
-#         'toolbar_location':None,
-#         'x_axis_location':"above"
-#     }, 
-#     hover_tooltips=[
-#         ('Calories','@calories'),
-#         ('Max HR','@max_hr BPM'),
-#         ('2-min recovery','@120_sec_rec BPM'),
-#     ], 
-#     show_dates=False
-# ) for col in ['calories', 'max_hr', '120_sec_rec']]
-
-# pcal_tabs = Tabs(
-#     tabs=[Panel(child=tabs[0], title=title) for tabs, title in zip(header_cals, ['Calories', 'Max Heart Rate', '2 min Recovery Heart Rate'])], 
-#     tabs_location='below'
-# )
 
 """
 #######################################################################################################
@@ -340,8 +287,15 @@ dp_callback = CustomJS(
 
     code=
     """
-    source.data['BPM'] = source.data[cb_obj.value];
     div.text = html.replace("{wod}", wods[cb_obj.value])
+    //source.data['BPM'] = source.data[cb_obj.value];
+    
+    if (cb_obj.value in source.data) {
+        source.data['BPM'] = source.data[cb_obj.value];
+    } else {
+        source.data['BPM'] = 0
+    }
+
     source.change.emit();
 
     """
@@ -452,7 +406,13 @@ dash = Column(
                 Row(space('30'), plot_sleep_schedule)
             ), 
             title="Sleep"
-        ),             
+        ),
+        Panel(
+            child=Column(
+                Div(text = htmltext.div_program)
+            ),
+            title="Program"
+        )             
     ], 
     sizing_mode='stretch_both', 
     tabs_location='above',
