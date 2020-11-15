@@ -57,7 +57,7 @@ class fitbit:
         date = []
         sleep_stages = []
 
-        for log in sleep_logs[:3]:
+        for log in sleep_logs[:1]:
 
             self.browser.find_element_by_xpath(log).click()
             time.sleep(4)
@@ -89,8 +89,8 @@ class fitbit:
             pd.DataFrame(sleep_stages, columns=['awake', 'rem', 'light', 'deep'])
         )
 
-        df['start'] = pd.to_datetime(df['date'].astype(str)+" "+df['start']+ " PM")
-        df['end'] = pd.to_datetime(df['date'].astype(str)+" "+df['end']+ " AM") + pd.Timedelta('1 days')
+        df['start'] = pd.to_datetime(df['date'].astype(str)+" "+df['start']+ " PM") - pd.Timedelta('1 days')
+        df['end'] = pd.to_datetime(df['date'].astype(str)+" "+df['end']+ " AM")
         df['duration'] = (df['end'] - df['start']).apply(lambda x: x.total_seconds())/60
 
         for stage in ['awake', 'rem', 'light', 'deep']:
@@ -125,7 +125,7 @@ def read_sleep_plot_df(datadir=datadir):
 def main():
     df_existing = pd.read_csv(datadir, parse_dates=['start', 'end'])
 
-    if not datetime.today().strftime('%Y-%m-%d') in list(df_existing['start'].apply(lambda x: x.strftime('%Y-%m-%d'))):
+    if not datetime.today().strftime('%Y-%m-%d') in list(df_existing['end'].apply(lambda x: x.strftime('%Y-%m-%d'))):
         fb = fitbit(email='hasan.nagib@gmail.com', password=os.environ['fitbit_password'])
         time.sleep(4)
         df_new = fb.get_sleep_data()

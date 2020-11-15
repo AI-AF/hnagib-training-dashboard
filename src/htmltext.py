@@ -3,8 +3,28 @@ bokeh_template = """
 	<!DOCTYPE html>
 	<html lang="en">
 	  {% block head %}
+	  
+
+	  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js" type="text/javascript"></script>
+	  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/7.6.0/math.min.js" type="text/javascript"></script>
+	  <script>
+	  function linearRegression(x, y) {
+            var ones = []
+            for(var i = 0; i < x.length; i++) {ones.push(1);} 
+            var X = math.transpose(math.matrix([x, ones]))
+            var b = math.transpose(math.matrix([y]))
+            var XT = math.matrix([x, ones])
+            var XTb = math.multiply(XT, b)
+            var soln = math.multiply(math.inv(math.multiply(XT,X)), XTb)
+            var m = soln.valueOf()[0][0]
+            var b = soln.valueOf()[1][0]
+          return [m, b]   
+        }
+	  </script>
+	  
 	  <head>
 	    {% block inner_head %}
+
 	      <meta charset="utf-8">
 	      <title>{% block title %}{{ title | e if title else "Bokeh Plot" }}{% endblock %}</title>
 	      {% block preamble %}{% endblock %}
@@ -23,7 +43,7 @@ bokeh_template = """
 	  {% block body %}
 	  <body>
 	    {% block inner_body %}
-	        <style>
+	    	<style>
 	        	.pointer {
 	        		style=color: transparent; 
 	        		background-color: transparent; 

@@ -334,6 +334,8 @@ def plot_cal(
     weekdays=None,
     xaxis_major_label_orientation='horizontal',
     yaxis_major_label_orientation='horizontal',
+    x_range=(0, 45),
+    y_range=(0, 4),
     fig_args={
         'plot_width':300,
         'plot_height':200,
@@ -399,26 +401,29 @@ def plot_cal(
 
     if mode == 'calendar':
         df[y] = (df[date_column].dt.weekday == 0).cumsum()
+        
         if not weekdays:
             weekdays=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
             
         range_args ={
             'x_range':weekdays,
-            'y_range':Range1d(float(df[y].max())+0.5, float(df[y].min())-0.5)#list(reversed([i(i) for i in df[y].unique()]))
+            'y_range':Range1d(y_range[0]-0.5, y_range[1]+0.5)#Range1d(float(df[y].min())-0.5, float(df[y].max())+0.5)#list(reversed([i(i) for i in df[y].unique()]))
         }
         xy = {'x':x, 'y':y}
 
     elif mode == 'github':
         df[y] = (df[date_column].dt.weekday == 6).cumsum()
+        
         if not weekdays:
             weekdays=list(reversed(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']))
 
         range_args ={
-            'x_range':Range1d(float(df[y].max())+0.5, float(df[y].min())-0.5), #Range1d(-1,53),  #[i(i) for i in df[y].unique()],
+            'x_range':Range1d(x_range[0]-0.5, x_range[1]+0.5),#Range1d(float(df[y].min())-0.5, float(df[y].max())+0.5), #Range1d(-1,53),  #[i(i) for i in df[y].unique()],
             'y_range':weekdays
         }
         xy = {'x':y, 'y':x}
     
+    df[y] = df[y].max() - df[y]
     source = ColumnDataSource(df)
     p = figure(**{**fig_args, **range_args})
 

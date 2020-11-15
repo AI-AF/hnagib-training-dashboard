@@ -92,6 +92,7 @@ plot_hr_zones, plot_hr_zones_cds = plot_ts(
 plot_hr_profile, plot_hr_profile_cds = plot_hr_profile(df_hr_profile, x='s', y='BPM')
 
 
+plot_window = pd.Timedelta('365 days')
 plot_sleep_stages, plot_sleep_stages_cds = plot_sleep_stages(df_sleep, plot_window)
 
 
@@ -99,7 +100,7 @@ plot_sleep_schedule, plot_sleep_schedule_cds = plot_ts(
     df_sleep,
     plot_height=400,
     plot_width=800,
-    alphas=[1],
+    alphas=[0.75],
     xvar='date',
     ys=['end_hour', 'start_hour'],
     hover_vars=['start_time', 'end_time'],
@@ -207,7 +208,7 @@ pcal, pcal_cds = plot_cal(
     mode='github', 
     fig_args={
         'plot_width':1000,
-        'plot_height':150,
+        'plot_height':175,
         'tools':'hover',
         'toolbar_location':None,
         'x_axis_location':"below"
@@ -229,7 +230,7 @@ pcal, pcal_cds = plot_cal(
 )
 
 pcal_30, pcal_30_cds = plot_cal(
-    df_cal.iloc[-31:].copy(), 
+    df_cal,#.iloc[-31:].copy(), 
     date_column='date', 
     color_column='calories',
     mode='calendar',
@@ -284,7 +285,8 @@ for mvmt in movements + ['Y']:
             date_column='date', 
             color_column='weight',
             palette=['#e73360'],
-            mode='github', 
+            mode='github',
+            x_range=[0, 60], 
             fig_args={
                 'plot_width':900,
                 'plot_height':125,
@@ -392,8 +394,6 @@ mvmt_name_mapper = {
     'Deadlift':'deadlift',
 }
 
-#movements = ['deadlift', 'barbell_bench_press', 'back_squat', 'shoulder_press']
-
 select = Select(title="Movement", value="Bench Press", options=list(mvmt_name_mapper.keys()), width=200)
 slider = Slider(start=1, end=10, value=1, step=1, title="Reps", width=200)
 
@@ -431,6 +431,48 @@ slider.js_on_change(
         """
     )
 )
+
+# Horozontal range slider for gitub calendar plot
+date_slider_callback = CustomJS(args=dict(p=pcal), code="""
+    var a = cb_obj.value;
+    var delta = p.x_range.end - p.x_range.start
+    p.x_range.start = a;
+    p.x_range.end = a+delta;
+""")
+
+date_slider = Slider(
+    start=-0.5, 
+    end=df_cal['week'].max() - (pcal.x_range.end - pcal.x_range.start)+0.5, 
+    value=-0.5, 
+    step=1, 
+    show_value=False, 
+    width=220,
+    tooltips=False
+)
+date_slider.js_on_change('value', date_slider_callback)
+
+# Vertical range slider for calendar plot
+date_slider_30_callback = CustomJS(args=dict(p=pcal_30), code="""
+    var a = cb_obj.value;
+    var delta = p.y_range.end - p.y_range.start
+    p.y_range.start = a;
+    p.y_range.end = a+delta;
+""")
+
+date_slider_30 = Slider(
+    start=-0.5, 
+    end=df_cal['week'].max() - (pcal_30.y_range.end - pcal_30.y_range.start)+0.5, 
+    value=0, 
+    step=1, 
+    show_value=False,
+    height=200,
+    orientation='vertical',
+    direction='rtl',
+    tooltips=False
+)
+date_slider_30.js_on_change('value', date_slider_30_callback)
+
+
 #########################################################################################################
 # Dashboard
 #########################################################################################################
@@ -442,6 +484,7 @@ def space(width, height=0):
 dash = Column(
     Column(
         Div(text=htmltext.div_header), 
+        Row(space('40'), date_slider),
         Row(space('40'), pcal)
     ),
 
@@ -456,7 +499,7 @@ dash = Column(
             child=Row(
                 Column(
                     Div(text=htmltext.div_workout_cal), 
-                    Row(space('60'), pcal_30), 
+                    Row(space('60'), pcal_30, date_slider_30), 
                     Div(text=htmltext.div_hr_profile), 
                     Row(space('30'), plot_hr_profile), 
                 ),
