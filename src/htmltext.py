@@ -191,7 +191,7 @@ div_conclusion = """
 	Why did I go through the trouble to aggregate all this data from different devices and services?
 	What's the point? For me this is a tool to help keep me motivated and accountable. Now that I have put 
 	in so much effort into visualizing my data, I guess I have to keep working out to 
-	produce more data to visualize... &#128170;&#127997;&#129299; ¯\_(ツ)_/¯
+	produce more data to visualize... &#128170;&#127997;&#129299;
 </p>
 </div>
 """
@@ -200,8 +200,8 @@ div_workout_cal = """
 <div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;"> 
 	<h2>&#128197; Workout Calendar</h2>
 	<p> 
-		I usually workout Mon-Fri and take rest days on weekends. I have tried the 3 days on and 2 days off
-		pattern as well. Although I liked that pattern better, the 5 days on 2 days off pattern works best
+		I try to workout Mon-Fri and rest on the weekends. I have tried the 3 days on and 2 days off
+		pattern as well. Although I liked that pattern better, the 5 days on 2 days off pattern usually works best
 		with my schedule. Most gyms are also on this pattern. The calendar plot below shows a heatmap of 
 		calories burned on a given day. Hover over or tap a date to see details of the workout.
 	</p>
@@ -218,7 +218,7 @@ div_header = """
 <a href="https://www.instagram.com/hnagib/" target="_blank" class="fa fa-instagram" style="font-size:24px"></a>
 <a href="https://twitter.com/HasanNagib/" target="_blank" class="fa fa-twitter" style="font-size:24px"></a>
 <a href="mailto:hasan.nagib@gmail.com?subject = Hasan's fitness data blog&body = Hello!" class="fa fa-envelope" style="font-size:24px"></a>
-<a href="https://s3.amazonaws.com/hnagib.com/Hasan-Nagib-Resume.pdf" target="_blank" class="tooltip fa fa-file" style="font-size:24px">
+<a href="https://drive.google.com/file/d/1EknQPaDBVSqB5ABQFnoCiVADLD6bsKyY/view?usp=sharing" target="_blank" class="tooltip fa fa-file" style="font-size:24px">
 <span class="tooltiptext">Resume</span></a>
 """
 
@@ -228,8 +228,7 @@ div_intro = """
     Welcome to my health & fitness data journal! This project was born out of my love for fitness, data & 
     <a href="https://docs.bokeh.org/en/latest/index.html" class="url" target="_blank">Bokeh</a>. The goal of this project is to aggregate and visualize 
     all of my health and fitness data from various sources. The data is sourced from my Fitbit, Polar HR10, Wahoo TickerX and 
-    <a href="https://www.wodup.com" class="url" target="_blank">WodUp</a> account. The data is refreshed by a daily batch job. This is a Bokeh dashboard hosted on AWS S3. 
-    Check out the GitHub <a class="url" target="_blank" href="https://github.com/hnagib/hnagib-training-dashboard">repo</a> for details of the project.
+    <a href="https://www.wodup.com" class="url" target="_blank">WodUp</a> account. Check out the GitHub <a class="url" target="_blank" href="https://github.com/hnagib/hnagib-training-dashboard">repo</a> for details of the project.
 </p>
 """
 
@@ -275,8 +274,8 @@ div_wod_logs="""
 <div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;">   
 <h2>&#128217; WOD Logs</h2>
 <p>I use <a href="https://www.wodup.com" class="url" target="_blank">WodUp</a> to log my workouts. Unfortunately WodUp currently does 
-not have an API to retrieve this data. Workout logs are scraped from my <a href="https://www.wodup.com" class="url" target="_blank">WodUp</a> account. 
-The data is scraped using <a class="url" target="_blank" href="https://pypi.org/project/selenium/">selenium</a>. Pick a date to see the WOD and the corresponding HR profile. 
+not have an API to retrieve this data. Workout logs are scraped from my <a href="https://www.wodup.com" class="url" target="_blank">WodUp</a> account 
+using <a class="url" target="_blank" href="https://pypi.org/project/selenium/">selenium</a>. Pick a date to see the WOD and the corresponding HR profile. 
 </p>
 </div>
 """
@@ -285,7 +284,7 @@ div_weight_lifting = """
 <div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;"> 
 <h2>&#127947;&#127997; Weight Lifting</h2>
 <p>The views below show lift PRs for different movements and reps. 
-I currently weigh ~170 lbs and my three lift total is {} lbs. 
+I currently weigh ~165 lbs and my three lift total is {} lbs. 
 In terms of <a href="https://strengthlevel.com/powerlifting-standards" class="url" target="_blank">powerlifting standards</a>,
 I would be an intermediate lifter. My goal is to get to the advanced level (i.e. 1000 lbs) by end of 2021. 
 I am hoping to get there with a 405 lbs deadlift, 355 lbs back squat & 240 lbs bench press &#129310;&#127997;
@@ -321,6 +320,10 @@ div_wodup = """
      {wod}
      </div>
 </div>
+"""
+
+div_pr_cal_header = """
+<h2>Lift PR Calendar</h2>
 """
 
 div_program = """

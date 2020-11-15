@@ -8,7 +8,7 @@ from plotutils import plot_ts, gen_cal_plot_df, plot_cal, plot_hr_profile, plot_
 from bokeh.io import save, output_file
 from bokeh.plotting import figure
 from bokeh.layouts import Column, Row
-from bokeh.models.widgets import DatePicker, Panel, Tabs
+from bokeh.models.widgets import DatePicker, Panel, Tabs, Select, Slider
 from bokeh.models import (HoverTool, CustomJS, Div, ColumnDataSource, 
     DataRange1d, TapTool, Button, Band, Legend, BasicTicker, ColorBar, 
     ColumnDataSource, LinearColorMapper, PrintfTickFormatter, Rect)
@@ -130,8 +130,8 @@ plot_rep_prs, plot_rep_prs_cds = plot_ts(
     ylabel='Weight (lbs)',
     xlabel='Reps',
     title=f'Rep PRs - Three lift total: {three_lift_total} lbs',
-    plot_height=350,#275,
-    plot_width=900,
+    plot_height=250, #350,
+    plot_width=700, #900,
     show_plot=False,
     tools='box_zoom,undo,redo,reset',
     palette=['#154ba6', '#3f8dff', '#7ec4ff', 'grey'],
@@ -142,20 +142,21 @@ plot_rep_prs, plot_rep_prs_cds = plot_ts(
 )
 
 tabs = []
-for i in [1, 2, 3, 4, 5]:
+df_pr_hist = {}
+
+for i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
 
     pr_hist = []
     for movement in movements:
         df_hist = pd.read_csv(f'../../WodUp-Scraper/data/hasannagib-{movement.replace("_", "-")}.csv', parse_dates=['date'])
         df = df_hist.query(f'(reps>={i})').sort_values('date')
         dfi = np.maximum.accumulate(df).set_index('date')[['weights']].rename(
-            columns={'weights': movement}).sort_index().drop_duplicates().groupby('date').max().reindex(
-            pd.date_range('2019-10-01', datetime.today())
-        )
+            columns={'weights': movement}).sort_index().drop_duplicates().groupby('date').max()
         dfi.index.name='date'
         pr_hist.append(dfi)
     
-    plot_pr_hist = pd.concat(pr_hist).dropna(thresh=1).sort_index().fillna(method='bfill').fillna(method='ffill')
+    plot_pr_hist = pd.concat(pr_hist).dropna(thresh=1).sort_index().fillna(method='ffill').groupby('date').max()
+    df_pr_hist[i] = plot_pr_hist
     add = plot_pr_hist.iloc[-1,:]
     add.name = datetime.today()
     plot_pr_hist = plot_pr_hist.append(add)
@@ -165,12 +166,13 @@ for i in [1, 2, 3, 4, 5]:
         xvar='date',
         styles=['oL'],
         units=['lbs'],
+        circle_size=3,
         x_axis_type='datetime',
         title=f'{i} rep max PR over time ',
         xlabel='Date',
         ylabel='Weight (lbs)',
-        plot_height=350,
-        plot_width=900,
+        plot_height=250,#350,
+        plot_width=700,#900,
         tools='box_zoom,undo,redo,reset',
         palette=['#154ba6', '#3f8dff', '#7ec4ff', 'grey'], #e73360
         show_plot=False,
@@ -180,9 +182,10 @@ for i in [1, 2, 3, 4, 5]:
 
     );
 
-    tabs.append(Panel(child=p, title=f"{i} RM"))
+    tabs.append(Panel(child=p, title=f"{i}"))
 
 plot_pr_history_tabs = Tabs(tabs=tabs, tabs_location='above', margin=(0,0,0,0))
+
 
 #########################################################################################################
 # Calendar plots
@@ -257,6 +260,51 @@ pcal_30, pcal_30_cds = plot_cal(
     date_text_color='grey'
 )
 
+
+for i, df in df_pr_hist.items():
+    df_pr_hist[i]['Y'] = df[df.columns[0]]
+
+df_pr_cal = {}
+plot_pr_cal = {}
+cds_pr_cal = {}
+
+for mvmt in movements + ['Y']:
+    df_pr_cal[mvmt] = {}
+    plot_pr_cal[mvmt] = {}
+    cds_pr_cal[mvmt] = {}
+    
+    for i in [1,2,3,4,5,6,7,8,9,10]:
+        df = df_pr_hist[i][[mvmt]].reset_index().groupby(mvmt).min().reset_index().set_index('date')
+        df = df.reindex(pd.date_range('2019-09-16', datetime.today()))
+        df.index.name = 'date'
+        df = df.reset_index().rename(columns={mvmt:'weight'})
+        
+        p, p_cds = plot_cal(
+            df, 
+            date_column='date', 
+            color_column='weight',
+            palette=['#e73360'],
+            mode='github', 
+            fig_args={
+                'plot_width':900,
+                'plot_height':125,
+                'tools':'hover',
+                'toolbar_location':None,
+                'x_axis_location':"above"
+            }, 
+            rect_args={
+                'width':1,
+                'height':1,
+                'line_color':'grey',
+                'line_width':1,
+            },
+            hover_tooltips=[('Weight',f'@weight lbs')], 
+            show_dates=False
+        )
+        
+        df_pr_cal[mvmt][i] = df
+        plot_pr_cal[mvmt][i] = p
+        cds_pr_cal[mvmt][i] = p_cds
 
 """
 #######################################################################################################
@@ -336,13 +384,59 @@ pcal_30.add_tools(TapTool(callback=tap_cal_callback))
 tap_cal_callback = CustomJS(args={'p': pcal_cds, 'r': plot_hr_zones, 'dp': datePicker}, code=cal_tap_code)
 pcal.add_tools(TapTool(callback=tap_cal_callback))
 
+# Slider and select for PR calendar
+mvmt_name_mapper = {
+    'Bench Press':'barbell_bench_press',
+    'Shoulder Press':'shoulder_press',
+    'Back Squat':'back_squat',
+    'Deadlift':'deadlift',
+}
 
+#movements = ['deadlift', 'barbell_bench_press', 'back_squat', 'shoulder_press']
+
+select = Select(title="Movement", value="Bench Press", options=list(mvmt_name_mapper.keys()), width=200)
+slider = Slider(start=1, end=10, value=1, step=1, title="Reps", width=200)
+
+
+select.js_on_change(
+    "value", 
+    CustomJS(
+        args={
+            'p1_cds':cds_pr_cal['Y'][1],
+            'cds_pr_cal':cds_pr_cal, 
+            'slider':slider,
+            'mvmt_name_mapper':mvmt_name_mapper
+        },
+        code="""            
+            var select_value = mvmt_name_mapper[cb_obj.value]
+            p1_cds.data = cds_pr_cal[select_value][slider.value].data
+            p1_cds.change.emit()
+        """
+    )
+)
+
+slider.js_on_change(
+    'value', 
+    CustomJS(
+        args={
+            'p1_cds':cds_pr_cal['Y'][1],
+            'cds_pr_cal':cds_pr_cal,
+            'select':select,
+            'mvmt_name_mapper':mvmt_name_mapper
+        },
+        code="""
+            var select_value = mvmt_name_mapper[select.value]
+            p1_cds.data = cds_pr_cal[select_value][cb_obj.value].data
+            p1_cds.change.emit()
+        """
+    )
+)
 #########################################################################################################
 # Dashboard
 #########################################################################################################
 
-def space(width):
-    return Div(text=htmltext.div_space.format(width=width))
+def space(width, height=0):
+    return Div(text=htmltext.div_space.format(width=width, height=height))
 
 
 dash = Column(
@@ -375,6 +469,25 @@ dash = Column(
             title="WODs"
         ),
         Panel(
+            child=Column(
+                Div(text=htmltext.div_weight_lifting.format(three_lift_total)), 
+                Div(text=htmltext.div_lift_total.format(three_lift_total)),
+                Row(space('30'),Column(Row(select, space('30'), slider), Div(text=htmltext.div_pr_cal_header), plot_pr_cal['Y'][1])),
+                Row(space('0','30')),
+                Row(space('60'), plot_pr_history_tabs),
+                Row(space('60'), plot_rep_prs), 
+            ), 
+            title="Weight Lifting"
+        ),
+        Panel(
+            child=Column(
+                Div(text=htmltext.div_sleep),
+                Row(space('30'), plot_sleep_stages), 
+                Row(space('30'), plot_sleep_schedule)
+            ), 
+            title="Sleep"
+        ),
+        Panel(
             child=Row(
                 Row(
                 Column(
@@ -390,29 +503,12 @@ dash = Column(
             title="Heart Rate"
             
         ), 
-        Panel(
-            child=Column(
-                Div(text=htmltext.div_weight_lifting.format(three_lift_total)), 
-                Div(text=htmltext.div_lift_total.format(three_lift_total)),
-                Row(space('30'), plot_pr_history_tabs),
-                Row(space('30'), plot_rep_prs), 
-            ), 
-            title="Weight Lifting"
-        ),
-        Panel(
-            child=Column(
-                Div(text=htmltext.div_sleep),
-                Row(space('30'), plot_sleep_stages), 
-                Row(space('30'), plot_sleep_schedule)
-            ), 
-            title="Sleep"
-        ),
-        Panel(
-            child=Column(
-                Div(text = htmltext.div_program)
-            ),
-            title="Program"
-        )             
+        # Panel(
+        #     child=Column(
+        #         Div(text = htmltext.div_program)
+        #     ),
+        #     title="Program"
+        # )             
     ], 
     sizing_mode='stretch_both', 
     tabs_location='above',

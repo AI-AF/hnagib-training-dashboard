@@ -383,19 +383,6 @@ def plot_cal(
     df['year'] = df[date_column].dt.strftime('%y')
     df[x] = df[date_column].dt.strftime('%a')
     df[day_of_month_column] = df[date_column].dt.day
-    df[y] = df[date_column].dt.isocalendar().week
-    
-    # Get absolute week numbering for the input data date range
-    d1 = dict(df.groupby('year').max()[y].cumsum())
-    d2 = {str(int(k)+1):v for k,v in d1.items()}
-    d2[min(d1.keys())] = 0    
-    df[y] = df.apply(lambda row: row[y] + d2[row['year']], axis=1)
-    
-    # Monotonize week numbers 
-    # e.g. pd.to_datetime('2019-12-30').isocalendar() --> (2020,1,1)
-    # For visualization, instead of counting this as 1st week of 2020, 
-    # this should be last week of 2019
-    df[y] = df.sort_values('date').groupby(['month', 'year'])[[y]].apply(lambda x: np.maximum.accumulate(x))
     
     if not color_low_value:
         color_low_value = df[color_column].min()
@@ -403,7 +390,6 @@ def plot_cal(
     if not color_high_value:
         color_high_value = df[color_column].min()
     
-    source = ColumnDataSource(df)
     mapper = LinearColorMapper(
         palette=palette, 
         low=df[color_column].min(), 
@@ -412,6 +398,7 @@ def plot_cal(
     )
 
     if mode == 'calendar':
+        df[y] = (df[date_column].dt.weekday == 0).cumsum()
         if not weekdays:
             weekdays=['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
             
@@ -422,6 +409,7 @@ def plot_cal(
         xy = {'x':x, 'y':y}
 
     elif mode == 'github':
+        df[y] = (df[date_column].dt.weekday == 6).cumsum()
         if not weekdays:
             weekdays=list(reversed(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']))
 
@@ -431,6 +419,7 @@ def plot_cal(
         }
         xy = {'x':y, 'y':x}
     
+    source = ColumnDataSource(df)
     p = figure(**{**fig_args, **range_args})
 
     rect_renderer = p.rect(
