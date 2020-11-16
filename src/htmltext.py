@@ -8,18 +8,30 @@ bokeh_template = """
 	  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js" type="text/javascript"></script>
 	  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/7.6.0/math.min.js" type="text/javascript"></script>
 	  <script>
-	  function linearRegression(x, y) {
+	  	function linearRegression(x, y) {
             var ones = []
             for(var i = 0; i < x.length; i++) {ones.push(1);} 
             var X = math.transpose(math.matrix([x, ones]))
             var b = math.transpose(math.matrix([y]))
+
             var XT = math.matrix([x, ones])
             var XTb = math.multiply(XT, b)
             var soln = math.multiply(math.inv(math.multiply(XT,X)), XTb)
+            
             var m = soln.valueOf()[0][0]
             var b = soln.valueOf()[1][0]
-          return [m, b]   
+          	return [m, b]   
         }
+
+      	function average(y) {
+	      	var total = 0;
+			for(var i = 0; i < y.length; i++) {
+			    total += y[i];
+			}
+			var avg = total / y.length;
+			return avg
+      	}
+      
 	  </script>
 	  
 	  <head>
@@ -329,7 +341,10 @@ div_sleep = """
 <p>
     Sleep data is sourced from Fitbit sleep logs. 
     My goal is to average 7.5 hours of time asleep and 9 hours time in bed.
-    Sleep start and end hours are plotted in 24 hour format.
+    Sleep start and end hours are plotted in 24 hour format in the sleep schedule plot. 
+    Hour "25" means 1:00 am. Select any subset of the data to update the average and regression
+    lines in the scatter plot. 
+
 </p>
 </div>
 """

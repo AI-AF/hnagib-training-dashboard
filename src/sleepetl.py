@@ -110,14 +110,23 @@ def read_sleep_plot_df(datadir=datadir):
     for s in stages:
         df_sleep[s] = df_sleep[s]/60
 
-    sleep_thresholds = [7,8,9]
+    sleep_thresholds = [5,7,8,9,20]
 
     for t in sleep_thresholds:
         df_sleep[f'{t}hr'] = t
 
     df_sleep['time_asleep'] = df_sleep['deep'] + df_sleep['rem'] + df_sleep['light']
-    df_sleep['7day_avg'] = df_sleep.set_index('date')['time_asleep'].rolling('7d', closed='right').mean().reset_index()['time_asleep']
+    df_sleep.loc[df_sleep['time_asleep'].isna(), "time_asleep"] = df_sleep.loc[df_sleep['time_asleep'].isna(), "duration"] * 0.75 / 60
+
+    df_sleep['7day_avg'] = df_sleep.set_index('date')['time_asleep'].rolling('7d', closed='both').mean().reset_index()['time_asleep']
+    df_sleep['start_7d_avg'] = df_sleep.set_index('date')['start_hour'].rolling('7d', closed='both', ).mean().reset_index()['start_hour']
+    df_sleep['end_7d_avg'] = df_sleep.set_index('date')['end_hour'].rolling('7d', closed='both', ).mean().reset_index()['end_hour']
+    df_sleep['start_7d_std'] = df_sleep.set_index('date')['start_hour'].rolling('7d', closed='both', ).std().reset_index()['start_hour']
+    df_sleep['end_7d_std'] = df_sleep.set_index('date')['end_hour'].rolling('7d', closed='both', ).std().reset_index()['end_hour']
+
     df_sleep['date_str'] = df_sleep['date'].dt.strftime('%a %b %d %Y')
+    df_sleep['ts_str'] = df_sleep['date'].dt.strftime('%a %b %d %Y')
+
     df_sleep['start_time'] = df_sleep['start'].dt.strftime('%I:%M %p')
     df_sleep['end_time'] = df_sleep['end'].dt.strftime('%I:%M %p')
     return df_sleep

@@ -4,6 +4,7 @@ import time
 import dask
 import pandas as pd
 import numpy as np
+from scipy import stats
 from plotutils import plot_ts, gen_cal_plot_df, plot_cal, plot_hr_profile, plot_sleep_stages
 from bokeh.io import save, output_file
 from bokeh.plotting import figure
@@ -93,30 +94,109 @@ plot_hr_profile, plot_hr_profile_cds = plot_hr_profile(df_hr_profile, x='s', y='
 
 
 plot_window = pd.Timedelta('365 days')
-plot_sleep_stages, plot_sleep_stages_cds = plot_sleep_stages(df_sleep, plot_window)
 
+plot_sleep_stages, plot_sleep_stages_cds = plot_sleep_stages(
+    df_sleep, 
+    plot_window, 
+    plot_height=300,
+    plot_width=450
+    )
 
 plot_sleep_schedule, plot_sleep_schedule_cds = plot_ts(
     df_sleep,
-    plot_height=400,
-    plot_width=800,
+    source=plot_sleep_stages_cds,
+    plot_height=300,
+    plot_width=450,
     alphas=[0.75],
     xvar='date',
     ys=['end_hour', 'start_hour'],
-    hover_vars=['start_time', 'end_time'],
+    hover_vars=['start_time', 'end_time', 'time_asleep'],
     hide_hovers=['start_hour', 'end_hour'],
     units=['hour'],
     x_range=plot_sleep_stages.x_range,
-    y_range=[2, 24],
+    y_range=[2, 30],
     ylabel='24-Hour',
     title='Sleep schedule',
     styles=['b'],
     palette=['grey'], #'#154ba6', '#3f8dff', '#7ec4ff', '#e73360'
     bounded_bar_label='sleep',
-    tools='xwheel_pan,pan,reset,box_zoom',
-    active_scroll='xwheel_pan',
+    tools='lasso_select,box_select,xwheel_pan,pan,reset,box_zoom',
+    active_drag='box_select',
     show_plot=False
 );
+plot_sleep_schedule.line(x="date", y='5hr', color="grey", line_dash="4 2", line_width=2, alpha=0.95, source=plot_sleep_schedule_cds)
+plot_sleep_schedule.line(x="date", y='20hr', color="grey", line_dash="4 2", line_width=2, alpha=0.95, source=plot_sleep_schedule_cds)
+plot_sleep_schedule.line(x="date", y='start_7d_avg', color="grey", line_width=3, alpha=0.95, source=plot_sleep_schedule_cds)
+plot_sleep_schedule.line(x="date", y='end_7d_avg', color="grey", line_width=3, alpha=0.95, source=plot_sleep_schedule_cds)
+
+
+plot_sleep_scatter = figure(
+    plot_height=450,
+    plot_width=450,
+    x_range=(15,30),
+    y_range=(3,10),
+    tools="lasso_select, box_select, reset",
+    toolbar_location='above',
+    title="Early bird or night owl?",
+    x_axis_label='Start hour',
+    y_axis_label='Time asleep (hours)',
+)
+
+plot_sleep_scatter.circle(
+    x='start_hour', 
+    y='time_asleep', 
+    size=7,
+    alpha=0.5,
+    color='grey',#'#3f8dff', #154ba6', #, '#3f8dff', '#7ec4ff', '#e73360'],
+    source=plot_sleep_schedule_cds
+)
+
+plot_sleep_scatter.add_tools(HoverTool(
+        tooltips=[
+            ("Duration", "@time_asleep"),
+            ("7day avg", "@7day_avg"),
+            ("Date", "@date_str"),
+            ("Start", "@start_time"),
+            ("End", "@end_time"),
+        ]
+    ))
+
+slope, intercept, r_value, p_value, std_err = stats.linregress(df_sleep['start_hour'], df_sleep['time_asleep'])
+
+regline_cds = ColumnDataSource(data={'x':[0, 30], 'y':[intercept, 30*(slope)+10.42]})
+plot_sleep_scatter.line(
+    x='x', 
+    y='y', 
+    color='orange',#"#154ba6", 
+    line_width=4,
+    line_dash="8 4", 
+    alpha=0.9, 
+    source=regline_cds,
+    legend_label='regression'
+)
+
+avgline_cds = ColumnDataSource(data={'x':[0, 30], 'y':[df_sleep['time_asleep'].mean(), df_sleep['time_asleep'].mean()]})
+plot_sleep_scatter.line(
+    x='x', 
+    y='y', 
+    color='grey',#"#154ba6", 
+    line_width=4,
+    line_dash="8 4", 
+    alpha=0.9, 
+    source=avgline_cds,
+    legend_label='average'
+)
+
+legend = Legend()
+plot_sleep_scatter.add_layout(legend, 'center')
+plot_sleep_scatter.legend.orientation = 'vertical'
+plot_sleep_scatter.legend.location = 'top_right'
+plot_sleep_scatter.legend.click_policy = 'hide'
+
+plot_sleep_scatter.legend.background_fill_alpha = 0.5
+plot_sleep_scatter.legend.border_line_alpha = 0
+
+
 
 movements = ['deadlift', 'barbell_bench_press', 'back_squat', 'shoulder_press']
 three_lift_total = int(df_pr.query("reps==1")[['barbell_bench_press', 'back_squat', 'deadlift']].sum().sum())
@@ -473,6 +553,65 @@ date_slider_30 = Slider(
 date_slider_30.js_on_change('value', date_slider_30_callback)
 
 
+plot_sleep_schedule_cds.selected.js_on_change(
+    'indices', 
+    CustomJS(
+        args={'s':plot_sleep_schedule_cds, 's2':regline_cds, 's3':avgline_cds},
+        code="""
+            
+            const inds = s.selected.indices;
+            const d = s.data;
+            var ym = []
+            var xm = []
+
+            if (inds.length == 0) {
+                return;
+            }
+            else if (inds.length == 1){
+                s2.data['y'] = [d['time_asleep'][inds[0]], d['time_asleep'][inds[0]]]
+                s3.data['y'] = [d['time_asleep'][inds[0]], d['time_asleep'][inds[0]]]
+            }
+            else if (inds.length > 1){
+                for (var i = 0; i < inds.length; i++) {
+                    ym.push(d['time_asleep'][inds[i]])
+                    xm.push(d['start_hour'][inds[i]])
+                }
+
+                var soln = linearRegression(xm, ym)
+                var m = soln[0]
+                var b = soln[1]
+
+                s2.data['y'] = [b, 30*m+b]
+                s3.data['y'] = [average(ym), average(ym)]
+            }
+            
+        s.change.emit();
+        s2.change.emit();
+        s3.change.emit();
+            
+        """
+    )
+)
+
+plot_sleep_scatter.js_on_event('reset', CustomJS(
+        args={'s':plot_sleep_schedule_cds, 's2':regline_cds, 's3':avgline_cds},
+        code="""
+        const d = s.data;
+        var xm = [].slice.call(d['start_hour'])
+        var ym = [].slice.call(d['time_asleep'])
+
+        var soln = linearRegression(xm, ym)
+        var m = soln[0]
+        var b = soln[1]
+        
+        s2.data['y'] = [b, 30*m+b]        
+        s3.data['y'] = [average(ym), average(ym)]
+
+        s2.change.emit();
+        s3.change.emit();
+        """
+))
+
 #########################################################################################################
 # Dashboard
 #########################################################################################################
@@ -495,6 +634,13 @@ dash = Column(
     ),
 
     Tabs(tabs=[
+        Panel(
+            child=Column(
+                Div(text=htmltext.div_sleep),
+                Row(space('30'), Column(plot_sleep_stages, plot_sleep_schedule), space('30'), plot_sleep_scatter), 
+            ), 
+            title="Sleep"
+        ),
         Panel(
             child=Row(
                 Column(
@@ -521,14 +667,6 @@ dash = Column(
                 Row(space('60'), plot_rep_prs), 
             ), 
             title="Weight Lifting"
-        ),
-        Panel(
-            child=Column(
-                Div(text=htmltext.div_sleep),
-                Row(space('30'), plot_sleep_stages), 
-                Row(space('30'), plot_sleep_schedule)
-            ), 
-            title="Sleep"
         ),
         Panel(
             child=Row(

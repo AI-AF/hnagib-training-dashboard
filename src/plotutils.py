@@ -12,6 +12,7 @@ from datetime import datetime
 
     
 def plot_ts(df_plot, 
+            source=None,
             ys=None,
             units=None,
             hover_vars=None,
@@ -40,6 +41,7 @@ def plot_ts(df_plot,
             show_plot=True,
             tools='',
             active_scroll=None,
+            active_drag=None,
             toolbar_location='above'
            ):
     
@@ -49,13 +51,18 @@ def plot_ts(df_plot,
     if units is None:
         units=['']*len(ys)
     
+
     df_plot = df_plot.reset_index().copy()
 
     if x_axis_type == 'datetime':
         df_plot['ts_str'] = df_plot[xvar].dt.strftime(ts_format)
         df_plot['dt_str'] = df_plot[xvar].dt.strftime('%Y-%m-%d')
 
+
     cds = ColumnDataSource(data=df_plot)
+
+    if source:
+        cds = source
 
     if y_range: 
         y_range = Range1d(y_range[0], y_range[1])        
@@ -69,37 +76,12 @@ def plot_ts(df_plot,
         title=title,
         tools=tools,
         active_scroll=active_scroll,
-        active_drag=None,
+        active_drag=active_drag,
         toolbar_location=toolbar_location
     )
 
-    # Define a DataSource
-    line_source = ColumnDataSource(data=dict(x=[df_plot[xvar][0]]))
-    js = '''
-    var geometry = cb_data['geometry'];
-    console.log(geometry);
-    var data = line_source.data;
-    var x = data['x'];
-    console.log(x);
-    if (isFinite(geometry.x)) {
-      for (i = 0; i < x.length; i++) {
-        x[i] = geometry.x;
-      }
-      line_source.change.emit();
-    }
-    '''
-
     plot_dict = {}
     
-#     if styles == ['/']:
-#         plot_dict['stack'] = [p.vbar_stack(
-#             ys,
-#             x=xvar,
-#             color=palette,
-#             width=bar_width,
-#             alpha=0.5,
-#             source=cds
-#         )]
     
     for y, color, style, width, alpha in zip(ys, itertools.cycle(palette),
                                       itertools.cycle(styles), itertools.cycle(bar_width),
@@ -226,7 +208,7 @@ def plot_hr_profile(df_ts, x='s', y='BPM'):
     return p, cds
 
 
-def plot_sleep_stages(df_sleep, plot_window):
+def plot_sleep_stages(df_sleep, plot_window, plot_height=400, plot_width=800):
     stages = ["deep", "rem", "light", "awake"]
     colors = ['#154ba6', '#3f8dff', '#7ec4ff', '#e73360']
     data = ColumnDataSource(df_sleep)
@@ -234,10 +216,10 @@ def plot_sleep_stages(df_sleep, plot_window):
     p = figure(
         x_range=DataRange1d(end=datetime.today()+pd.Timedelta('1 days'), follow='end', follow_interval=plot_window),
         x_axis_type="datetime",
-        plot_height=400,
-        plot_width=800,
-        tools='xwheel_pan,pan,reset,box_zoom',
-        active_scroll='xwheel_pan',
+        plot_height=plot_height,
+        plot_width=plot_width,
+        tools='box_select,lasso_select,xwheel_pan,pan,reset,box_zoom',
+        active_drag='box_select',
         toolbar_location='above',
         title="Sleep quality",
     )
