@@ -11,16 +11,28 @@ bokeh_template = """
 	  	function linearRegression(x, y) {
             var ones = []
             for(var i = 0; i < x.length; i++) {ones.push(1);} 
-            var X = math.transpose(math.matrix([x, ones]))
-            var b = math.transpose(math.matrix([y]))
+            const X = math.transpose(math.matrix([x, ones]))
+            const b = math.transpose(math.matrix([y]))
 
-            var XT = math.matrix([x, ones])
-            var XTb = math.multiply(XT, b)
-            var soln = math.multiply(math.inv(math.multiply(XT,X)), XTb)
-            
-            var m = soln.valueOf()[0][0]
-            var b = soln.valueOf()[1][0]
-          	return [m, b]   
+            const XT = math.matrix([ones, x])
+            const XTb = math.multiply(XT, b)
+            const XTX = math.multiply(XT,X)
+            const XTX_inv = math.inv(XTX)
+            const soln = math.multiply(XTX_inv, XTb)
+            const k = 2
+            const n = y.length
+
+            //const e = math.subtract(b, math.multiply(X, soln))
+            //const eT = math.transpose(e)
+            //const s = math.sqrt(math.multiply((1/(n-k)), math.multiply(eT, e))).valueOf()[0][0]
+            //console.log(math.sqrt((s*s)/math.subset(XTX, math.index(0,0))))
+			//console.log(math.sqrt((s*s)/math.subset(XTX, math.index(1,1))))
+			
+
+            const b0 = soln.valueOf()[0][0]
+            const b1 = soln.valueOf()[1][0]
+
+          	return {'beta':[b0,b1]}
         }
 
       	function average(y) {
@@ -31,6 +43,19 @@ bokeh_template = """
 			var avg = total / y.length;
 			return avg
       	}
+
+      	function percentile($percentile, $array) {
+		  $array.sort(function (a, b) { return a - b; });
+
+		    $index = ($percentile/100) * $array.length;
+		    if (Math.floor($index) == $index) {
+		         $result = ($array[$index-1] + $array[$index])/2;
+		    }
+		    else {
+		        $result = $array[Math.floor($index)];
+		    }
+		    return $result;
+		}
       
 	  </script>
 	  
@@ -214,7 +239,7 @@ bokeh_template = """
 	</html>
 """
 
-div_space = '<div style="width: {width}px; height: 10px;"></div>'
+div_space = '<div style="width: {width}px; height: {height}px;"></div>'
 
 #	<span style='text-align: center; font-size:50px;'>&nbsp;&#128170;&#127997;&#129299;</span>
 div_conclusion = """
@@ -349,6 +374,17 @@ div_sleep = """
 </div>
 """
 
+div_sleep_regression = """
+<div style="font-size:12px; font-family:helvetica; color:grey; margin-left: 40px; width: 450px; float: left;">
+<h2>&#128202;Summary</h2>
+<p>
+<ul>
+<li>[b1, b0] = {beta}</li>
+</ul>
+</p>
+</div>
+"""
+
 div_wodup = """
 <div style="font-size:12px; font-family:helvetica; width: 100%; overflow: hidden;">
      <div style="margin-left: 50px; width: 350px; float: left;"> 
@@ -364,21 +400,21 @@ div_pr_cal_header = """
 div_program = """
 <h2>Monday</h2>
     <ul>
-        <li>Back Squat: 3X10 @ 225 lbs</li>
-        <li>Bench Press: 3X5 @ 195 lbs</li>
-        <li>Assault bike: Max cals in 15 minutes</li>
+        <li>Half kneeling landmine press</li>
+        <li>Strict chin up</li>
+        <li>Assault bike: Max cals in 10 minutes</li>
     </ul>
 <h2>Tuesday</h2>
     <ul>
-        <li>Ring muscle ups 10x5</li>
-        <li>Handstand push ups 5x5</li>
+        <li>Ring dips</li>
+        <li>Nordic hamstring curls</li>
         <li>Box pistols 5x10</li>
         <li>Assault bike: Max cals in 15 minutes</li>
     </ul>
 <h2>Wednesday</h2>
     <ul>
-        <li>Shoulder press: 5X8 @ 85 lbs</li>
-        <li>Barbell hip thrust: 5X8 @ 225 lbs</li>
+        <li>Handstand push up</li>
+        <li>Barbell hip thrust</li>
         <li>4 Rounds for time:</li>
             <ul>
                 <li>4 Strict pull ups</li>
@@ -396,7 +432,7 @@ div_program = """
     </ul>
 <h2>Friday</h2>
     <ul>
-        <li>Deadlift: 5X8 @ 260 lbs</li>
+        <li>Nordic hamstring curls</li>
         <li>Banded bench press: 5X8 @ 135 lbs</li>
         <li>4 Rounds for time:</li>
             <ul>

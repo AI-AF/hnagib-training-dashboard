@@ -117,12 +117,21 @@ def read_sleep_plot_df(datadir=datadir):
 
     df_sleep['time_asleep'] = df_sleep['deep'] + df_sleep['rem'] + df_sleep['light']
     df_sleep.loc[df_sleep['time_asleep'].isna(), "time_asleep"] = df_sleep.loc[df_sleep['time_asleep'].isna(), "duration"] * 0.75 / 60
+    df_sleep.loc[df_sleep['time_asleep']==0, "time_asleep"] = df_sleep.loc[df_sleep['time_asleep']==0, "duration"] * 0.75 / 60
+
+    for i in ['awake', 'rem', 'light', 'deep']:    
+        df_sleep.loc[df_sleep[i].isna(), i] = df_sleep[i].mean()
+        df_sleep.loc[df_sleep[i]==0, i] = df_sleep[i].mean()
 
     df_sleep['7day_avg'] = df_sleep.set_index('date')['time_asleep'].rolling('7d', closed='both').mean().reset_index()['time_asleep']
-    df_sleep['start_7d_avg'] = df_sleep.set_index('date')['start_hour'].rolling('7d', closed='both', ).mean().reset_index()['start_hour']
-    df_sleep['end_7d_avg'] = df_sleep.set_index('date')['end_hour'].rolling('7d', closed='both', ).mean().reset_index()['end_hour']
-    df_sleep['start_7d_std'] = df_sleep.set_index('date')['start_hour'].rolling('7d', closed='both', ).std().reset_index()['start_hour']
-    df_sleep['end_7d_std'] = df_sleep.set_index('date')['end_hour'].rolling('7d', closed='both', ).std().reset_index()['end_hour']
+    df_sleep['start_7d_avg'] = df_sleep.set_index('date')['start_hour'].rolling('7d', closed='both', ).mean().reset_index()['start_hour'].shift(1)
+    df_sleep['end_7d_avg'] = df_sleep.set_index('date')['end_hour'].rolling('7d', closed='both', ).mean().reset_index()['end_hour'].shift(1)
+    df_sleep['start_7d_std'] = df_sleep.set_index('date')['start_hour'].rolling('7d', closed='both', ).std().reset_index()['start_hour'].shift(1)
+    df_sleep['end_7d_std'] = df_sleep.set_index('date')['end_hour'].rolling('7d', closed='both', ).std().reset_index()['end_hour'].shift(1)
+
+    df_sleep['start_hour_prev_day'] = df_sleep['start_hour'].shift(1) 
+    df_sleep['end_hour_prev_day'] = df_sleep['end_hour'].shift(1)
+    df_sleep['time_asleep_prev_day'] = df_sleep['time_asleep'].shift(1) 
 
     df_sleep['date_str'] = df_sleep['date'].dt.strftime('%a %b %d %Y')
     df_sleep['ts_str'] = df_sleep['date'].dt.strftime('%a %b %d %Y')

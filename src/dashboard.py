@@ -10,7 +10,7 @@ from bokeh.io import save, output_file
 from bokeh.plotting import figure
 from bokeh.layouts import Column, Row
 from bokeh.models.widgets import DatePicker, Panel, Tabs, Select, Slider
-from bokeh.models import (HoverTool, CustomJS, Div, ColumnDataSource, 
+from bokeh.models import (HoverTool, CustomJS, Div, ColumnDataSource, LinearAxis,
     DataRange1d, TapTool, Button, Band, Legend, BasicTicker, ColorBar, 
     ColumnDataSource, LinearColorMapper, PrintfTickFormatter, Rect)
 from bokeh.transform import transform
@@ -95,6 +95,17 @@ plot_hr_profile, plot_hr_profile_cds = plot_hr_profile(df_hr_profile, x='s', y='
 
 plot_window = pd.Timedelta('365 days')
 
+# Prep sleep dataframe for plotting
+df_sleep['x'] = df_sleep['deep']
+df_sleep['y'] = df_sleep['rem']
+df_sleep['color'] = 'grey'
+
+# Impute missing data with mean 
+for col in df_sleep.columns:
+    if df_sleep[col].isna().sum() > 0:
+        df_sleep[col].fillna(value=df_sleep[col].mean(), inplace=True)
+
+
 plot_sleep_stages, plot_sleep_stages_cds = plot_sleep_stages(
     df_sleep, 
     plot_window, 
@@ -133,21 +144,21 @@ plot_sleep_schedule.line(x="date", y='end_7d_avg', color="grey", line_width=3, a
 plot_sleep_scatter = figure(
     plot_height=450,
     plot_width=450,
-    x_range=(15,30),
-    y_range=(3,10),
-    tools="lasso_select, box_select, reset",
+    tools="pan,lasso_select, box_select, reset",
     toolbar_location='above',
-    title="Early bird or night owl?",
-    x_axis_label='Start hour',
-    y_axis_label='Time asleep (hours)',
+    title="Interactive linear regression",
+    x_axis_label='deep (hours)', 
+    active_drag='box_select',
+    y_axis_label='rem (hours)'
 )
 
+
 plot_sleep_scatter.circle(
-    x='start_hour', 
-    y='time_asleep', 
+    x='x', 
+    y='y', 
     size=7,
     alpha=0.5,
-    color='grey',#'#3f8dff', #154ba6', #, '#3f8dff', '#7ec4ff', '#e73360'],
+    color='color',#'#3f8dff', #154ba6', #, '#3f8dff', '#7ec4ff', '#e73360'],
     source=plot_sleep_schedule_cds
 )
 
@@ -158,12 +169,22 @@ plot_sleep_scatter.add_tools(HoverTool(
             ("Date", "@date_str"),
             ("Start", "@start_time"),
             ("End", "@end_time"),
+            ("Deep", "@deep"),
+            ("REM", "@rem"),
+            ("Light", "@light"),
+            ("Awake", "@awake"),
         ]
     ))
 
-slope, intercept, r_value, p_value, std_err = stats.linregress(df_sleep['start_hour'], df_sleep['time_asleep'])
+slope, intercept, r_value, p_value, std_err = stats.linregress(df_sleep['x'], df_sleep['y'])
+import statsmodels.api as sm
 
-regline_cds = ColumnDataSource(data={'x':[0, 30], 'y':[intercept, 30*(slope)+10.42]})
+print(sm.OLS(df_sleep['y'], sm.add_constant(df_sleep['x'])).fit().summary())
+
+
+div_sleep_regression = Div(text=htmltext.div_sleep_regression.format(beta=[round(slope,2), round(intercept,2)]))
+
+regline_cds = ColumnDataSource(data={'x':[df_sleep['x'].min(), df_sleep['x'].max()], 'y':[df_sleep['x'].min()*(slope)+intercept, df_sleep['x'].max()*(slope)+intercept]})
 plot_sleep_scatter.line(
     x='x', 
     y='y', 
@@ -175,7 +196,7 @@ plot_sleep_scatter.line(
     legend_label='regression'
 )
 
-avgline_cds = ColumnDataSource(data={'x':[0, 30], 'y':[df_sleep['time_asleep'].mean(), df_sleep['time_asleep'].mean()]})
+avgline_x_cds = ColumnDataSource(data={'x':[df_sleep['x'].min(), df_sleep['x'].max()], 'y':[df_sleep['y'].mean(), df_sleep['y'].mean()]})
 plot_sleep_scatter.line(
     x='x', 
     y='y', 
@@ -183,7 +204,19 @@ plot_sleep_scatter.line(
     line_width=4,
     line_dash="8 4", 
     alpha=0.9, 
-    source=avgline_cds,
+    source=avgline_x_cds,
+    legend_label='average'
+)
+
+avgline_y_cds = ColumnDataSource(data={'y':[df_sleep['y'].min(), df_sleep['y'].max()], 'x':[df_sleep['x'].mean(), df_sleep['x'].mean()]})
+plot_sleep_scatter.line(
+    x='x', 
+    y='y', 
+    color='grey',#"#154ba6", 
+    line_width=4,
+    line_dash="8 4", 
+    alpha=0.9, 
+    source=avgline_y_cds,
     legend_label='average'
 )
 
@@ -474,9 +507,8 @@ mvmt_name_mapper = {
     'Deadlift':'deadlift',
 }
 
-select = Select(title="Movement", value="Bench Press", options=list(mvmt_name_mapper.keys()), width=200)
+select = Select(title="Movement", value="Deadlift", options=list(mvmt_name_mapper.keys()), width=200)
 slider = Slider(start=1, end=10, value=1, step=1, title="Reps", width=200)
-
 
 select.js_on_change(
     "value", 
@@ -553,64 +585,308 @@ date_slider_30 = Slider(
 date_slider_30.js_on_change('value', date_slider_30_callback)
 
 
+select_sleep_scatter_x = Select(
+    title="X", 
+    value="deep", 
+    options=['start_hour', 'end_hour', 'start_7d_avg', 'end_7d_avg', 
+    'start_7d_std', 'end_7d_std', 'time_asleep', 'deep', 'rem', 'light', 'awake',
+    'start_hour_prev_day', 'end_hour_prev_day', 'time_asleep_prev_day'
+    ], 
+    width=175
+    )
+
+select_sleep_scatter_y = Select(
+    title="Y", 
+    value="rem", 
+    options=['time_asleep', '7day_avg', 'deep', 'awake', 'light', 'rem', 'start_hour', 'end_hour'], 
+    width=175
+    )
+
+
+
 plot_sleep_schedule_cds.selected.js_on_change(
     'indices', 
     CustomJS(
-        args={'s':plot_sleep_schedule_cds, 's2':regline_cds, 's3':avgline_cds},
+        args={
+        's':plot_sleep_schedule_cds, 
+        's2':regline_cds, 
+        's3':avgline_x_cds,
+        's4':avgline_y_cds, 
+        'sx':select_sleep_scatter_x, 
+        'sy':select_sleep_scatter_y,
+        'p':plot_sleep_scatter,
+        'div':div_sleep_regression,
+        'html':htmltext.div_sleep_regression
+        },
         code="""
             
             const inds = s.selected.indices;
             const d = s.data;
+
+            var x_range_start = Math.min(...[].slice.call(s.data[sx.value])) 
+            var x_range_end = Math.max(...[].slice.call(s.data[sx.value])) 
+            var y_range_start = Math.min(...[].slice.call(s.data[sy.value])) 
+            var y_range_end = Math.max(...[].slice.call(s.data[sy.value])) 
+
+            p.y_range.start = Math.min(...[].slice.call(d[sy.value])) 
+            p.y_range.end = Math.max(...[].slice.call(d[sy.value])) 
+
             var ym = []
             var xm = []
+
+            for (var i = 0; i < d['color'].length; i++) {
+                d['color'][i] = "grey"
+            }
 
             if (inds.length == 0) {
                 return;
             }
+
             else if (inds.length == 1){
-                s2.data['y'] = [d['time_asleep'][inds[0]], d['time_asleep'][inds[0]]]
-                s3.data['y'] = [d['time_asleep'][inds[0]], d['time_asleep'][inds[0]]]
+                s2.data['y'] = [d[sy.value][inds[0]], d[sy.value][inds[0]]]
+                s3.data['y'] = [d[sy.value][inds[0]], d[sy.value][inds[0]]]
+                s4.data['x'] = [d[sx.value][inds[0]], d[sx.value][inds[0]]]
             }
+
             else if (inds.length > 1){
+
                 for (var i = 0; i < inds.length; i++) {
-                    ym.push(d['time_asleep'][inds[i]])
-                    xm.push(d['start_hour'][inds[i]])
+                    ym.push(d[sy.value][inds[i]])
+                    xm.push(d[sx.value][inds[i]])
+                    d['color'][inds[i]] = "firebrick"
                 }
 
                 var soln = linearRegression(xm, ym)
-                var m = soln[0]
-                var b = soln[1]
+                var m = soln['beta'][0]
+                var b = soln['beta'][1]
 
-                s2.data['y'] = [b, 30*m+b]
+                s2.data['x'] = [x_range_start, x_range_end]
+                s3.data['x'] = [x_range_start, x_range_end] 
+                s4.data['y'] = [y_range_start, y_range_end]  
+
+                s2.data['y'] = [x_range_start*m+b, x_range_end*m+b]
                 s3.data['y'] = [average(ym), average(ym)]
+                s4.data['x'] = [average(xm), average(xm)]
+
+                var beta = []
+                for (let i = 0; i < soln['beta'].length; i++) {
+                    beta.push(soln['beta'][i].toFixed(2))
+                }
+                div.text = html.replace("{beta}", "["+beta[0]+", "+beta[1]+"]")
             }
-            
+
         s.change.emit();
         s2.change.emit();
         s3.change.emit();
-            
+        s4.change.emit();
         """
     )
 )
 
 plot_sleep_scatter.js_on_event('reset', CustomJS(
-        args={'s':plot_sleep_schedule_cds, 's2':regline_cds, 's3':avgline_cds},
+        args={
+            's':plot_sleep_schedule_cds, 
+            's2':regline_cds, 
+            's3':avgline_x_cds,
+            's4':avgline_y_cds, 
+            'sx':select_sleep_scatter_x, 
+            'sy':select_sleep_scatter_y, 
+            'p':plot_sleep_scatter,
+            'div':div_sleep_regression,
+            'html':htmltext.div_sleep_regression
+        },
         code="""
         const d = s.data;
-        var xm = [].slice.call(d['start_hour'])
-        var ym = [].slice.call(d['time_asleep'])
+        var xm = [].slice.call(d[sx.value])
+        var ym = [].slice.call(d[sy.value])
+
+        for (var i = 0; i < d['color'].length; i++) {
+            d['color'][i] = "grey"
+        }
 
         var soln = linearRegression(xm, ym)
-        var m = soln[0]
-        var b = soln[1]
+        var m = soln['beta'][0]
+        var b = soln['beta'][1]
         
-        s2.data['y'] = [b, 30*m+b]        
-        s3.data['y'] = [average(ym), average(ym)]
+        var x_range_start = Math.min(...xm) 
+        var x_range_end = Math.max(...xm) 
+        var y_range_start = Math.min(...[].slice.call(s.data[sy.value])) 
+        var y_range_end = Math.max(...[].slice.call(s.data[sy.value])) 
 
+        s2.data['x'] = [x_range_start, x_range_end]
+        s3.data['x'] = [x_range_start, x_range_end]  
+        s4.data['y'] = [y_range_start, y_range_end]  
+
+        s2.data['y'] = [x_range_start*m+b, x_range_end*m+b]
+        s3.data['y'] = [average(ym), average(ym)]
+        s4.data['x'] = [average(xm), average(xm)]
+
+        p.y_range.start = Math.min(...[].slice.call(d[sy.value])) 
+        p.y_range.end = Math.max(...[].slice.call(d[sy.value])) 
+
+        var beta = []
+        for (let i = 0; i < soln['beta'].length; i++) {
+            beta.push(soln['beta'][i].toFixed(2))
+        }
+        div.text = html.replace("{beta}", "["+beta[0]+", "+beta[1]+"]")
+
+        s.change.emit();
         s2.change.emit();
         s3.change.emit();
+        s4.change.emit();
         """
 ))
+
+
+select_sleep_scatter_x.js_on_change(
+    "value", 
+    CustomJS(
+        args={
+            's':plot_sleep_stages_cds, 
+            's2':regline_cds, 
+            's3':avgline_x_cds,
+            's4':avgline_y_cds, 
+            'p':plot_sleep_scatter,
+            'sx':select_sleep_scatter_x, 
+            'sy':select_sleep_scatter_y,
+            'xaxis':plot_sleep_scatter.xaxis[0], 
+            'yaxis':plot_sleep_scatter.yaxis[0],
+            'div':div_sleep_regression,
+            'html':htmltext.div_sleep_regression,            
+        },
+        code="""    
+            const inds = s.selected.indices;  
+            const d = s.data;
+            var select_value = cb_obj.value
+            d['x'] = d[select_value]
+
+            if (inds.length > 1){
+                var xm = []
+                var ym = []
+
+                for (var i = 0; i < inds.length; i++) {
+                    ym.push(d[sy.value][inds[i]])
+                    xm.push(d[sx.value][inds[i]])
+                }
+            }
+            else {
+                var xm = [].slice.call(d['x'])
+                var ym = [].slice.call(d['y'])
+            }
+
+            var soln = linearRegression(xm, ym)
+            var m = soln['beta'][0]
+            var b = soln['beta'][1]
+            
+
+            var x_range_start = Math.min(...[].slice.call(d['x'])) 
+            var x_range_end = Math.max(...[].slice.call(d['x'])) 
+            var y_range_start = Math.min(...[].slice.call(s.data[sy.value])) 
+            var y_range_end = Math.max(...[].slice.call(s.data[sy.value])) 
+
+            s2.data['x'] = [x_range_start, x_range_end]
+            s3.data['x'] = [x_range_start, x_range_end]  
+            s4.data['y'] = [y_range_start, y_range_end]
+
+            s2.data['y'] = [x_range_start*m+b, x_range_end*m+b]
+            s3.data['y'] = [average(ym), average(ym)]
+            s4.data['x'] = [average(xm), average(xm)]        
+        
+            p.y_range.start = Math.min(...[].slice.call(d[sy.value])) 
+            p.y_range.end = Math.max(...[].slice.call(d[sy.value])) 
+            
+            xaxis.axis_label = sx.value + " (hours)";
+            yaxis.axis_label = sy.value + " (hours)";      
+        
+            var beta = []
+            for (let i = 0; i < soln['beta'].length; i++) {
+                beta.push(soln['beta'][i].toFixed(2))
+            }
+            div.text = html.replace("{beta}", "["+beta[0]+", "+beta[1]+"]")
+
+            s.change.emit();
+            s2.change.emit();
+            s3.change.emit();
+            s4.change.emit();
+            p.change.emit();
+        """
+    )
+)
+
+select_sleep_scatter_y.js_on_change(
+    "value", 
+    CustomJS(
+        args={
+            's':plot_sleep_stages_cds, 
+            's2':regline_cds, 
+            's3':avgline_x_cds,
+            's4':avgline_y_cds, 
+            'p':plot_sleep_scatter,
+            'sx':select_sleep_scatter_x, 
+            'sy':select_sleep_scatter_y,
+            'xaxis':plot_sleep_scatter.xaxis[0], 
+            'yaxis':plot_sleep_scatter.yaxis[0],
+            'div':div_sleep_regression,
+            'html':htmltext.div_sleep_regression,            
+        },
+        code="""  
+            const inds = s.selected.indices;    
+            const d = s.data;
+            var select_value = cb_obj.value
+            d['y'] = d[select_value]
+
+
+            if (inds.length > 1){
+                var xm = []
+                var ym = []
+
+                for (var i = 0; i < inds.length; i++) {
+                    ym.push(d[sy.value][inds[i]])
+                    xm.push(d[sx.value][inds[i]])
+                }
+            }
+            else {
+                var xm = [].slice.call(d['x'])
+                var ym = [].slice.call(d['y'])
+            }
+
+            var soln = linearRegression(xm, ym)
+            var m = soln['beta'][0]
+            var b = soln['beta'][1]
+            
+            var x_range_start = Math.min(...[].slice.call(d['x'])) 
+            var x_range_end = Math.max(...[].slice.call(d['x'])) 
+            var y_range_start = Math.min(...[].slice.call(s.data[sy.value])) 
+            var y_range_end = Math.max(...[].slice.call(s.data[sy.value])) 
+
+            s2.data['x'] = [x_range_start, x_range_end]
+            s3.data['x'] = [x_range_start, x_range_end]  
+            s4.data['y'] = [y_range_start, y_range_end]
+
+            s2.data['y'] = [x_range_start*m+b, x_range_end*m+b]
+            s3.data['y'] = [average(ym), average(ym)]
+            s4.data['x'] = [average(xm), average(xm)] 
+
+            p.y_range.start = Math.min(...[].slice.call(d[sy.value])) 
+            p.y_range.end = Math.max(...[].slice.call(d[sy.value])) 
+            
+            xaxis.axis_label = sx.value + " (hours)";
+            yaxis.axis_label = sy.value + " (hours)";    
+            
+            var beta = []
+            for (let i = 0; i < soln['beta'].length; i++) {
+                beta.push(soln['beta'][i].toFixed(2))
+            }
+            div.text = html.replace("{beta}", "["+beta[0]+", "+beta[1]+"]")
+
+            s.change.emit();
+            s2.change.emit();
+            s3.change.emit();
+            s4.change.emit();
+            p.change.emit();
+        """
+    )
+)
 
 #########################################################################################################
 # Dashboard
@@ -636,8 +912,13 @@ dash = Column(
     Tabs(tabs=[
         Panel(
             child=Column(
-                Div(text=htmltext.div_sleep),
-                Row(space('30'), Column(plot_sleep_stages, plot_sleep_schedule), space('30'), plot_sleep_scatter), 
+                Row(Div(text=htmltext.div_sleep), space('60'), Column(space('0', '50'), Row(select_sleep_scatter_x, select_sleep_scatter_y))),
+                Row(
+                    space('30'), 
+                    Column(plot_sleep_stages, plot_sleep_schedule), 
+                    space('30'), 
+                    Column(plot_sleep_scatter, div_sleep_regression)
+                ), 
             ), 
             title="Sleep"
         ),
