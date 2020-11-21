@@ -461,3 +461,45 @@ def plot_cal(
     rect_renderer.nonselection_glyph.fill_alpha=1
 
     return p, source
+
+
+def plot_stacked_hr_zones(cds, x_range, plot_height=325, plot_width=450):
+    stages = ['119_137', '138_151', '152_173', '174_220']
+    colors = list(reversed(['#e73360', '#154ba6', '#3f8dff', '#7ec4ff']))
+
+    p = figure(
+        x_range=x_range,
+        x_axis_type="datetime",
+        plot_height=plot_height,
+        plot_width=plot_width,
+        tools='box_select,xwheel_pan,pan,reset,box_zoom',
+        active_drag='box_select',
+        toolbar_location='above',
+        title="Heart rate zones",
+    )
+    p.add_layout(Legend(), 'below')
+    p.vbar_stack(
+        stages, 
+        x='date', 
+        width=24*60*60*900, 
+        color=colors, 
+        source=cds, 
+        legend_label=[s.replace('_', '-') for s in stages]
+    )
+
+    p.y_range.start = 0
+    p.x_range.range_padding = 0.1
+    p.xgrid.grid_line_color = None
+    p.axis.minor_tick_line_color = None
+    p.add_tools(HoverTool(
+            tooltips=[
+                ("Date", "@ts_str")
+            ]
+        ))
+    p.outline_line_color = None
+    p.legend.click_policy = 'hide'
+    p.legend.orientation = "horizontal"
+    p.legend.border_line_alpha = 0
+    p.yaxis.axis_label = 'Hours'
+
+    return p

@@ -72,11 +72,13 @@ def read_rcvry_csv(datadir):
     df['L2'] = 59
     df['L3'] = 66
 
+    for col in ['119_137', '138_151', '152_173', '174_220']:
+        df[col] = df[col]/60
+
     df = df.reset_index()
     df['timestamp'] = pd.to_datetime(df['timestamp'].dt.strftime('%Y-%m-%d 07:00:00'))
     df = df.set_index('timestamp')
     df['date'] = pd.to_datetime(df.index.strftime('%Y-%m-%d'))
-    
     return df
 
 def read_hr_profile_csv(datadir):

@@ -110,7 +110,7 @@ def read_sleep_plot_df(datadir=datadir):
     for s in stages:
         df_sleep[s] = df_sleep[s]/60
 
-    sleep_thresholds = [5,7,8,9,20]
+    sleep_thresholds = [-4,5,7,8,9,20]
 
     for t in sleep_thresholds:
         df_sleep[f'{t}hr'] = t
@@ -124,10 +124,10 @@ def read_sleep_plot_df(datadir=datadir):
         df_sleep.loc[df_sleep[i]==0, i] = df_sleep[i].mean()
 
     df_sleep['7day_avg'] = df_sleep.set_index('date')['time_asleep'].rolling('7d', closed='both').mean().reset_index()['time_asleep']
-    df_sleep['start_7d_avg'] = df_sleep.set_index('date')['start_hour'].rolling('7d', closed='both', ).mean().reset_index()['start_hour'].shift(1)
-    df_sleep['end_7d_avg'] = df_sleep.set_index('date')['end_hour'].rolling('7d', closed='both', ).mean().reset_index()['end_hour'].shift(1)
-    df_sleep['start_7d_std'] = df_sleep.set_index('date')['start_hour'].rolling('7d', closed='both', ).std().reset_index()['start_hour'].shift(1)
-    df_sleep['end_7d_std'] = df_sleep.set_index('date')['end_hour'].rolling('7d', closed='both', ).std().reset_index()['end_hour'].shift(1)
+    df_sleep['start_last_7day_avg'] = df_sleep.set_index('date')['start_hour'].rolling('7d', closed='both', ).mean().reset_index()['start_hour'].shift(1)
+    df_sleep['end_last_7day_avg'] = df_sleep.set_index('date')['end_hour'].rolling('7d', closed='both', ).mean().reset_index()['end_hour'].shift(1)
+    df_sleep['start_last_7day_stdev'] = df_sleep.set_index('date')['start_hour'].rolling('7d', closed='both', ).std().reset_index()['start_hour'].shift(1)
+    df_sleep['end_last_7day_stdev'] = df_sleep.set_index('date')['end_hour'].rolling('7d', closed='both', ).std().reset_index()['end_hour'].shift(1)
 
     df_sleep['start_hour_prev_day'] = df_sleep['start_hour'].shift(1) 
     df_sleep['end_hour_prev_day'] = df_sleep['end_hour'].shift(1)
@@ -138,6 +138,11 @@ def read_sleep_plot_df(datadir=datadir):
 
     df_sleep['start_time'] = df_sleep['start'].dt.strftime('%I:%M %p')
     df_sleep['end_time'] = df_sleep['end'].dt.strftime('%I:%M %p')
+
+    df_sleep['start_hour_rel'] = df_sleep['start_hour']-24
+    df_sleep['start_rel_last_7day_avg'] = df_sleep.set_index('date')['start_hour_rel'].rolling('7d', closed='both', ).mean().reset_index()['start_hour_rel'].shift(1)
+    df_sleep['efficiency'] = 1- (df_sleep['awake'] / (df_sleep['end_hour']-df_sleep['start_hour_rel']))
+    
     return df_sleep
 
 def main():
