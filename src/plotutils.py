@@ -229,7 +229,8 @@ def plot_sleep_stages(df_sleep, plot_window, plot_height=400, plot_width=800):
     for t in [7,8,9]:
         p.line(x='date', y=f'{t}hr', source=data, color='white', line_width=2, line_dash="4 4")
 
-    p.line(x='date', y='7day_avg', source=data, line_width=3, legend_label='7day_avg')
+    p.line(x='date', y='7day_avg', source=data, line_width=3, legend_label='7 day avg')
+
     p.y_range.start = 0
     p.x_range.range_padding = 0.1
     p.xgrid.grid_line_color = None
@@ -493,7 +494,11 @@ def plot_stacked_hr_zones(cds, x_range, plot_height=325, plot_width=450):
     p.axis.minor_tick_line_color = None
     p.add_tools(HoverTool(
             tooltips=[
-                ("Date", "@ts_str")
+                ("Date", "@ts_str"),
+                ("119-137", "@119_137 min"),
+                ("138-151", "@138_151 min"),
+                ("152-173", "@152_173 min"),
+                ("174-220", "@174_220 min")
             ]
         ))
     p.outline_line_color = None

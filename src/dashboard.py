@@ -79,7 +79,7 @@ plot_stacked_hr = plot_stacked_hr_zones(plot_hr_rcvry_cds, plot_hr_rcvry.x_range
 
 
 plot_hr_zones, plot_hr_zones_cds = plot_ts(
-    (df_hr_rcvry.rolling(7).sum().dropna()),
+    (df_hr_rcvry.rolling('7d').sum().dropna()),
     ys=['174_220', '152_173', '138_151'],
     styles=['o-'],
     units=['min'],
@@ -176,7 +176,7 @@ plot_sleep_scatter = figure(
     plot_width=450,
     tools="lasso_select, pan, box_zoom, box_select, reset",
     toolbar_location='right',
-    title="Interactive linear regression",
+    title="",
     x_axis_label=f'{plot_sleep_scatter_initial_x} (hours)', 
     active_drag='box_select',
     y_axis_label=f'{plot_sleep_scatter_initial_y} (hours)'
@@ -245,7 +245,7 @@ plot_sleep_scatter.line(
     line_dash="8 4", 
     alpha=0.9, 
     source=avgline_x_cds,
-    legend_label='average'
+    #legend_label='ave'
 )
 
 avgline_y_cds = ColumnDataSource(data={'y':[df_sleep['y'].min(), df_sleep['y'].max()], 'x':[df_sleep['x'].mean(), df_sleep['x'].mean()]})
@@ -275,7 +275,7 @@ plot_sleep_scatter.line(
 legend = Legend()
 plot_sleep_scatter.add_layout(legend, 'center')
 plot_sleep_scatter.legend.orientation = 'vertical'
-plot_sleep_scatter.legend.location = 'top_right'
+plot_sleep_scatter.legend.location = 'bottom_left'
 plot_sleep_scatter.legend.click_policy = 'hide'
 
 plot_sleep_scatter.legend.background_fill_alpha = 0.5
@@ -644,6 +644,8 @@ select_sleep_scatter_x = Select(
     options=[
         'deep', 'rem', 'light', 'awake',
         'start_hour', 'end_hour', 'time_asleep',
+        'start_last_3day_avg', 'end_last_3day_avg', 
+        'start_last_3day_stdev', 'end_last_3day_stdev', 
         'start_last_7day_avg', 'end_last_7day_avg', 
         'start_last_7day_stdev', 'end_last_7day_stdev', 
         'start_hour_prev_day', 'end_hour_prev_day', 'time_asleep_prev_day'
@@ -912,8 +914,8 @@ def space(width, height=0):
 
 
 dash = Column(
+    Row(space('20'), Div(text=htmltext.div_social)), 
     Column(
-        Div(text=htmltext.div_header), 
         Row(space('40'), date_slider),
         Row(space('40'), pcal)
     ),
@@ -940,9 +942,8 @@ dash = Column(
                     Div(text=htmltext.div_sleep_regression_desc) 
                 ),
                 Column(
-                    #space('0', '35'),
                     Div(text=htmltext.div_sleep_plot), 
-                    div_smry, #Div(text=htmltext.div_smry),
+                    div_smry,
                     Row(space('70'),select_sleep_scatter_x, select_sleep_scatter_y), 
                     Row(space('30'), Column(plot_sleep_scatter)
                         
@@ -1012,43 +1013,9 @@ dash = Column(
 )
 
 # Save dashboard
-output_dir = '/Users/hasannagib/Documents/s3stage/dashboards/index.html'
+output_dir = '/Users/hasannagib/Documents/hnagib.github.io/index.html'
 output_file(output_dir, title="Hasan's Data Blog")
 save(dash, template=htmltext.bokeh_template)
 
-####################################################################################################
 
-
-
-
-plot_squat_scatter = figure(
-    plot_height=400,
-    plot_width=450,
-    tools="lasso_select, pan, box_zoom, box_select, reset",
-    toolbar_location='right',
-    title="Interactive linear regression",
-    x_axis_label=f'{plot_sleep_scatter_initial_x} (hours)', 
-    active_drag='box_select',
-    y_axis_label=f'{plot_sleep_scatter_initial_y} (hours)'
-)
-
-
-plot_squat_scatter.circle(
-    x='x', 
-    y='y', 
-    size=7,
-    alpha=0.25,
-    color='color',#'#3f8dff', #154ba6', #, '#3f8dff', '#7ec4ff', '#e73360'],
-    source=ColumnDataSource(df_sleep)
-)
-
-
-squatchek = Column(
-    Row(plot_squat_scatter),
-)
-
-# Save dashboard
-output_dir = '/Users/hasannagib/Documents/s3stage/dashboards/squatchek.html'
-output_file(output_dir, title="SquatChek")
-save(squatchek, template=htmltext.squatchek)
 

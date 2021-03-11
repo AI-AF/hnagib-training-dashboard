@@ -36,7 +36,7 @@ class fitbit:
         time.sleep(4)
         self.browser.find_element_by_xpath("//input[@type='email']").send_keys(self.email)
         self.browser.find_element_by_xpath("//input[@type='password']").send_keys(self.password)
-        self.browser.find_element_by_xpath("//button[@id='ember694']").click()
+        self.browser.find_element_by_xpath("//button[@id='ember702']").click()
         time.sleep(2)
 
     def get_sleep_data(self):
@@ -57,7 +57,7 @@ class fitbit:
         date = []
         sleep_stages = []
 
-        for log in sleep_logs[:1]:
+        for log in sleep_logs[:30]:
 
             self.browser.find_element_by_xpath(log).click()
             time.sleep(4)
@@ -128,6 +128,11 @@ def read_sleep_plot_df(datadir=datadir):
     df_sleep['end_last_7day_avg'] = df_sleep.set_index('date')['end_hour'].rolling('7d', closed='both', ).mean().reset_index()['end_hour'].shift(1)
     df_sleep['start_last_7day_stdev'] = df_sleep.set_index('date')['start_hour'].rolling('7d', closed='both', ).std().reset_index()['start_hour'].shift(1)
     df_sleep['end_last_7day_stdev'] = df_sleep.set_index('date')['end_hour'].rolling('7d', closed='both', ).std().reset_index()['end_hour'].shift(1)
+
+    df_sleep['start_last_3day_avg'] = df_sleep.set_index('date')['start_hour'].rolling('3d', closed='both', ).mean().reset_index()['start_hour'].shift(1)
+    df_sleep['end_last_3day_avg'] = df_sleep.set_index('date')['end_hour'].rolling('3d', closed='both', ).mean().reset_index()['end_hour'].shift(1)
+    df_sleep['start_last_3day_stdev'] = df_sleep.set_index('date')['start_hour'].rolling('3d', closed='both', ).std().reset_index()['start_hour'].shift(1)
+    df_sleep['end_last_3day_stdev'] = df_sleep.set_index('date')['end_hour'].rolling('3d', closed='both', ).std().reset_index()['end_hour'].shift(1)
 
     df_sleep['start_hour_prev_day'] = df_sleep['start_hour'].shift(1) 
     df_sleep['end_hour_prev_day'] = df_sleep['end_hour'].shift(1)

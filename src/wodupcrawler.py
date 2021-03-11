@@ -27,7 +27,7 @@ class WodUp:
         self.password = password
         self.username = username
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        #chrome_options.add_argument("--headless")
         self.browser = webdriver.Chrome(
             chrome_driver_path, 
             options=chrome_options
@@ -84,8 +84,8 @@ class WodUp:
                     for url in v:
                         self.browser.get('https://wodup.com' + url)
                         time.sleep(1.5)
-                        #e = self.browser.find_element_by_xpath("//div[@id='WODUP_ACTIVITY_DETAIL_SELECTED_ITEM_ID']/a/div")
-                        e = self.browser.find_element_by_xpath('//div[@class="ph2 pv3 pa3-l"]')
+                        e = self.browser.find_element_by_xpath("//div[@id='WODUP_ACTIVITY_DETAIL_SELECTED_ITEM_ID']/a/div")
+                        #e = self.browser.find_element_by_xpath('//div[@class="ph2 pv3 pa3-l"]')
                         wods.append(e.get_attribute('innerHTML'))
                 else:
                     wods = ['', '', '', '']
@@ -97,7 +97,7 @@ class WodUp:
 
 def get_latest_wodup_log_date(wods):
     dts = sorted(wods.keys())
-    latest_wodup_log_dt = dts[-1]
+    latest_wodup_log_dt = dts[-30]
 
     i = -1
     while wods[latest_wodup_log_dt] == '<p>&nbsp;</p><p>&nbsp;</p><p>&nbsp;</p>': 
@@ -146,7 +146,7 @@ def main():
     dts = [dt.strftime('%Y-%m-%d') for dt in pd.date_range('2019-09-16', datetime.today())]
     
     # Overwrite scrape data for these days to pick up logs entered after script run
-    overwrite_dates = []#dts[-1:]
+    overwrite_dates = dts[-3:] #[]
     overwrite_dates = list((set(dts) - set(urls.keys())).union(set(overwrite_dates)))
 
     print('Scraping WoUp logs for: ', overwrite_dates)
