@@ -8,7 +8,7 @@ from selenium.webdriver.chrome.options import Options
 
 
 datadir = '/Users/hasannagib/Documents/s3stage/fitbit/sleep.csv'
-
+n_days = 3
 
 class fitbit:
 
@@ -33,10 +33,10 @@ class fitbit:
         """
         Sign into WodUp using self.email and self.password
         """
-        time.sleep(4)
+        time.sleep(10)
         self.browser.find_element_by_xpath("//input[@type='email']").send_keys(self.email)
         self.browser.find_element_by_xpath("//input[@type='password']").send_keys(self.password)
-        self.browser.find_element_by_xpath("//button[@id='ember702']").click()
+        self.browser.find_element_by_xpath("//button[@id='ember714']").click()
         time.sleep(2)
 
     def get_sleep_data(self):
@@ -57,7 +57,7 @@ class fitbit:
         date = []
         sleep_stages = []
 
-        for log in sleep_logs[:30]:
+        for log in sleep_logs[:n_days]:
 
             self.browser.find_element_by_xpath(log).click()
             time.sleep(4)

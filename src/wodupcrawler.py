@@ -10,7 +10,7 @@ import re
 
 
 datadir = '/Users/hasannagib/Documents/s3stage/wodup/'
-
+n_days = 3
 
 class WodUp:
 
@@ -27,7 +27,7 @@ class WodUp:
         self.password = password
         self.username = username
         chrome_options = Options()
-        #chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--headless")
         self.browser = webdriver.Chrome(
             chrome_driver_path, 
             options=chrome_options
@@ -146,7 +146,7 @@ def main():
     dts = [dt.strftime('%Y-%m-%d') for dt in pd.date_range('2019-09-16', datetime.today())]
     
     # Overwrite scrape data for these days to pick up logs entered after script run
-    overwrite_dates = dts[-3:] #[]
+    overwrite_dates = dts[-n_days:] #[]
     overwrite_dates = list((set(dts) - set(urls.keys())).union(set(overwrite_dates)))
 
     print('Scraping WoUp logs for: ', overwrite_dates)
