@@ -10,7 +10,7 @@ import re
 
 
 datadir = '/Users/hasannagib/Documents/s3stage/wodup/'
-n_days = 3
+n_days = 1
 
 class WodUp:
 
@@ -27,7 +27,7 @@ class WodUp:
         self.password = password
         self.username = username
         chrome_options = Options()
-        chrome_options.add_argument("--headless")
+        #chrome_options.add_argument("--headless")
         self.browser = webdriver.Chrome(
             chrome_driver_path, 
             options=chrome_options
